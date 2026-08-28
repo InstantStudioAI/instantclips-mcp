@@ -5,10 +5,10 @@ video for TikTok, Instagram Reels and Stories. It runs a hosted **MCP server**, 
 Codex, Cursor, VS Code, the Claude app, ChatGPT or any other MCP client can do what the web app
 does: import a product, draft the creative direction, and render the video.
 
-**This repository is not the server.** The server is hosted, there is nothing here to install or
-run to use it, and no key ever leaves your machine except as a bearer token to the endpoint below.
-What this repository holds is the connection guide, and one dependency-free script for reading the
-live tool surface.
+**This repository is the connection guide, registry metadata and example client — not the server.**
+The server is hosted, there is nothing here to install or run to use it, and no key ever leaves
+your machine except as a bearer token to the endpoint below. There is no implementation to audit
+here: `example.py` is a client, and the tool surface it talks to lives behind the endpoint.
 
 ## Endpoint
 
@@ -56,8 +56,8 @@ They fill in your token once you have minted one.
 
 These connect through their own connector settings rather than a file. Point one at
 `https://app.instantclips.ai/mcp` and authenticate with the same token — a request header in
-Claude, an API key in ChatGPT. Claude's request headers are still in beta, and ChatGPT needs
-developer mode on a Business or Enterprise workspace.
+Claude, an API key in ChatGPT. Claude's request headers are still in beta, and ChatGPT requires
+developer mode; availability there depends on your account and workspace policy.
 
 ### Anything else
 
@@ -121,6 +121,12 @@ is what you need before scripting the workflow above.
 `server.json` is this server's entry in the [official MCP registry](https://registry.modelcontextprotocol.io),
 which the other directories ingest from. It is a remote server, so the entry carries a `remotes`
 block and no package — there is nothing to npm-install.
+
+It deliberately carries no `repository` field. The schema defines that as the server's *source
+code*, "so users and security experts can inspect the code" — and the implementation is not here,
+so pointing it at this repository would send a reviewer looking for something that does not exist.
+Most remote servers in the registry omit it for the same reason. `websiteUrl` carries the outbound
+link instead.
 
 The `ai.instantclips` namespace is the reverse-DNS of the domain, which requires publishing under
 DNS or HTTP domain auth rather than GitHub auth. Authenticating with GitHub instead would force the
