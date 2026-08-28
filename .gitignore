@@ -4,3 +4,7 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+# Registry signing keys — `mcp-publisher login dns` writes key.pem here, and a
+# committed private key is a published private key. Never relax this.
+key.pem
+*.pem

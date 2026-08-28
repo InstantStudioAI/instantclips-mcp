@@ -116,6 +116,22 @@ is what you need before scripting the workflow above.
   description of the product and the tool sequence
 - [Terms](https://app.instantclips.ai/terms) · [Privacy](https://app.instantclips.ai/privacy)
 
+## Registry
+
+`server.json` is this server's entry in the [official MCP registry](https://registry.modelcontextprotocol.io),
+which the other directories ingest from. It is a remote server, so the entry carries a `remotes`
+block and no package — there is nothing to npm-install.
+
+The `ai.instantclips` namespace is the reverse-DNS of the domain, which requires publishing under
+DNS or HTTP domain auth rather than GitHub auth. Authenticating with GitHub instead would force the
+entry into `io.github.instantstudioai/...` and give up the branded namespace.
+
+Re-publish with `mcp-publisher publish` after bumping `version`. The signing key stays out of the
+repository — `.gitignore` covers `*.pem`, and a committed private key is a published one.
+
+`glama.json` is the separate, Glama-specific file that claims the listing there. A server under an
+organisation rather than a personal account can only be claimed with that file present.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). The license covers this repository's contents; use of the hosted
