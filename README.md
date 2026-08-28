@@ -110,8 +110,8 @@ is what you need before scripting the workflow above.
 
 ## Links
 
-- [instantclips.ai/automate](https://instantclips.ai/automate/) — the MCP page, with the same
-  configuration blocks
+- [instantclips.ai/automate](https://instantclips.ai/automate/) — what the automation is and what
+  it is for. It does not repeat the setup; this file and the app's setup page are where that lives.
 - [app.instantclips.ai/llms.txt](https://app.instantclips.ai/llms.txt) — machine-readable
   description of the product and the tool sequence
 - [Terms](https://app.instantclips.ai/terms) · [Privacy](https://app.instantclips.ai/privacy)
