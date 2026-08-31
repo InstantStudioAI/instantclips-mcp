@@ -1,0 +1,46 @@
+{
+  "name": "instantclips-mcp",
+  "mcpName": "ai.instantclips/instantclips",
+  "version": "1.1.0",
+  "description": "Use the hosted InstantClips MCP server from stdio-only clients.",
+  "type": "module",
+  "bin": {
+    "instantclips-mcp": "bin/instantclips-mcp.js"
+  },
+  "files": [
+    "bin/"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check:pack": "npm pack --dry-run",
+    "prepublishOnly": "npm test && npm run check:pack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InstantStudioAI/instantclips-mcp.git"
+  },
+  "homepage": "https://instantclips.ai/automate/",
+  "bugs": {
+    "url": "https://github.com/InstantStudioAI/instantclips-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "video-generation",
+    "video-ads",
+    "ecommerce",
+    "ai-agents"
+  ],
+  "author": "InstantStudioAI",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0"
+  }
+}

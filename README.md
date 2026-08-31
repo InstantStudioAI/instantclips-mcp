@@ -1,14 +1,16 @@
 # InstantClips MCP
 
+**English** · [Español](README.es.md) · [简体中文](README.zh-CN.md)
+
 [InstantClips](https://instantclips.ai) turns an e-commerce product into short-form vertical
 video for TikTok, Instagram Reels and Stories. It runs a hosted **MCP server**, so Claude Code,
 Codex, Cursor, VS Code, the Claude app, ChatGPT or any other MCP client can do what the web app
 does: import a product, draft the creative direction, and render the video.
 
-**This repository is the connection guide, registry metadata and example client — not the server.**
-The server is hosted, there is nothing here to install or run to use it, and no key ever leaves
-your machine except as a bearer token to the endpoint below. There is no implementation to audit
-here: `example.py` is a client, and the tool surface it talks to lives behind the endpoint.
+**The product server stays hosted.** This repository contains its connection guide, registry
+metadata, example HTTP client and a small open-source stdio adapter for clients that cannot connect
+to a remote server directly. The adapter only carries MCP messages to the hosted endpoint; the
+tool definitions and product implementation remain in one place.
 
 ## Endpoint
 
@@ -28,6 +30,9 @@ one-click install buttons that fill your token in for you.
 
 ## Install
 
+Connect to the hosted endpoint directly whenever your client supports Streamable HTTP. Use the
+stdio adapter below only for clients and automated runners that require a local command.
+
 ### Claude Code
 
 ```bash
@@ -46,6 +51,34 @@ http_headers = { Authorization = "Bearer YOUR_TOKEN" }
 
 To keep the token out of the file, swap the header for `bearer_token_env_var = "INSTANTCLIPS_TOKEN"`
 and export it in your shell instead.
+
+### Stdio-only clients and headless runners
+
+The `instantclips-mcp` npm package is a thin stdio-to-HTTPS adapter. It reads the token from the
+environment, fixes the upstream endpoint to InstantClips and forwards the protocol unchanged:
+
+```json
+{
+  "mcpServers": {
+    "instantclips": {
+      "command": "npx",
+      "args": ["-y", "instantclips-mcp"],
+      "env": {
+        "INSTANTCLIPS_TOKEN": "YOUR_TOKEN"
+      }
+    }
+  }
+}
+```
+
+For an automated connectivity check, including the live tool names:
+
+```bash
+INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
+```
+
+The token is accepted only through `INSTANTCLIPS_TOKEN`, never as a command-line argument, so it
+does not appear in the process list. Node.js 20 or newer is required.
 
 ### Cursor and VS Code
 
@@ -119,24 +152,26 @@ is what you need before scripting the workflow above.
 ## Registry
 
 `server.json` is this server's entry in the [official MCP registry](https://registry.modelcontextprotocol.io),
-which the other directories ingest from. It is a remote server, so the entry carries a `remotes`
-block and no package — there is nothing to npm-install.
+which the other directories ingest from. One `ai.instantclips/instantclips` entry carries both the
+hosted endpoint in `remotes` and the stdio adapter in `packages`, so a host can choose the transport
+it supports without creating two identities for the same tool surface.
 
-It deliberately carries no `repository` field. The schema defines that as the server's *source
-code*, "so users and security experts can inspect the code" — and the implementation is not here,
-so pointing it at this repository would send a reviewer looking for something that does not exist.
-Most remote servers in the registry omit it for the same reason. `websiteUrl` carries the outbound
-link instead.
+The npm package's `mcpName` must exactly match that registry name. The repository link points to the
+open-source adapter; the hosted product implementation is not in this repository.
 
 The `ai.instantclips` namespace is the reverse-DNS of the domain, which requires publishing under
 DNS or HTTP domain auth rather than GitHub auth. Authenticating with GitHub instead would force the
 entry into `io.github.instantstudioai/...` and give up the branded namespace.
 
-Re-publish with `mcp-publisher publish` after bumping `version`. The signing key stays out of the
-repository — `.gitignore` covers `*.pem`, and a committed private key is a published one.
+Publish the npm package first, then re-publish this same registry entry with
+`mcp-publisher publish` after bumping its `version`. Domain authentication keeps the branded
+`ai.instantclips` namespace; do not replace it with an `io.github.*` name. The signing key stays out
+of the repository — `.gitignore` covers `*.pem`, and a committed private key is a published one.
 
 `glama.json` is the separate, Glama-specific file that claims the listing there. A server under an
 organisation rather than a personal account can only be claimed with that file present.
+It carries ownership only: configure Glama's build as `npm ci`, run
+`node bin/instantclips-mcp.js`, and supply `INSTANTCLIPS_TOKEN` as a secret in the server admin UI.
 
 ## License
 
