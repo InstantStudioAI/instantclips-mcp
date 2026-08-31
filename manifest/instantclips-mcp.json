@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "source": "https://app.instantclips.ai/mcp",
+  "capabilities": {
+    "tools": {}
+  },
+  "serverInfo": {
+    "name": "instantclips",
+    "title": "InstantClips",
+    "version": "0.2.0",
+    "websiteUrl": "https://instantclips.ai"
+  },
+  "instructions": "InstantClips turns a product into a short vertical marketing video.\n\nEvery video is drafted against a BRAND — a voice, a target market and a\nset of keywords. Getting the brand right matters more than anything else\nhere: a product drafted under the wrong company's voice renders perfectly\nand is still unusable. Never assume a product belongs to whatever brand\nthe account already has.\n\nStart by asking the user for their store's URL if you do not already know\nthe brand, and call `list_brands` to see what the account has. Unlike the\nwebsite, which takes a product link and gets out of the way, you can\nsimply ask — a short question here is cheaper than a wrongly branded\nvideo.\n\nThe workflow, in order:\n\n1. `import_product_from_url` with the product's page URL (or\n   `create_product_from_images` with hosted image URLs). Both return\n   immediately and import in the background.\n2. Poll `get_product` until `import_status` is \"imported\".\n   - If it reports `brand_decision_required` with `drafting: false`, the\n     storefront does not match any brand on the account. Stop and put the\n     choice to the user: create a brand for it (`create_brand`) or attach\n     it to one they already have (`set_product_brand`). Do not choose for\n     them. No direction is drafted until this is settled.\n   - Otherwise the import also drafts a video direction — a six-section\n     creative plan (Hook / Content Focus / Format / Suggesting Visual\n     Aesthetic / Execution Guidelines /\n     Strict Guidelines & Restrictions) — so keep polling until\n     `video_direction.drafting` is false.\n3. Show the drafted direction to the user. Edit it with\n   `update_video_direction`, or roll a completely different angle with\n   `redraft_video_direction`. The direction is optional: an empty one is\n   valid and generation still works.\n4. `generate_video` — this SPENDS THE USER'S CREDITS. Get the user's\n   explicit go-ahead first, and tell them the credit cost that\n   `get_product` reports.\n5. Poll `get_video` until status is \"done\", then give the user\n   `output_url` (the finished MP4) and `share_url` (a public page).\n\nA render takes a few minutes. Poll every 20-30 seconds rather than in a\ntight loop, and tell the user what you are waiting on.\n",
+  "tools": [
+    {
+      "name": "list_brands",
+      "title": "List the account's brands",
+      "description": "List the brands on this account, with the plan's brand limit and whether\nanother brand can be created.\n\nA brand carries the identity every video is drafted against: its voice,\nits target market and its keywords. A product must belong to the brand it\nactually comes from — a product drafted under another company's voice is\nwrong even though it renders fine.\n\nCall this before answering a `brand_decision_required` from\n`get_product`, and whenever the user needs to choose or name a brand.\n\nThis does not spend credits.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      }
+    },
+    {
+      "name": "import_product_from_url",
+      "title": "Import a product from its page URL",
+      "description": "Start a new InstantClips product from a product page URL (a storefront\nlisting, e.g. a Shopify product page).\n\nReturns immediately with a product_id — the scrape, the image download\nand the first video-direction draft all run in the background. Poll\n`get_product` until `import_status` is \"imported\" and\n`video_direction.drafting` is false, which usually takes under a minute.\n\nPasting a URL that was already imported on this account returns that\nexisting product instead of creating a duplicate.\n\nIf the storefront name does not exactly match a brand this account has\nalready reviewed, the import stops on a brand decision instead of\nguessing: `get_product` will report `brand_decision_required`, and no\nvideo direction is drafted until it is resolved with `create_brand` or\n`set_product_brand`. Do not assume the account's existing brand — a\nproduct from a different company drafted under the wrong brand's voice\nis the failure this prevents. Pass `brand_id` only when the user has\ntold you which brand this product belongs to.\n\nThis does not spend credits. Only `generate_video` does.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The product page URL, e.g. https://store.example.com/products/wool-runner"
+          },
+          "brand_id": {
+            "type": "string",
+            "description": "Optional, and only when the user has said which brand this is. Omit it to let the import match the storefront against the account's brands and ask when it cannot. Use `list_brands` to see what exists."
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "create_product_from_images",
+      "title": "Create a product from image URLs",
+      "description": "Start a new InstantClips product from hosted product photos, for a\nproduct that has no public page to scrape.\n\nImages must be publicly reachable URLs — this endpoint cannot read files\nfrom the caller's machine. Images larger than\n8MB are skipped; at most\n9 are used in a render.\n\nReturns immediately with a product_id; the downloads and the first\nvideo-direction draft run in the background. Poll `get_product` until\n`import_status` is \"imported\".\n\nPrefer `import_product_from_url` when a product page exists — the scrape\nalso collects the name, description, price and brand identity, which\nmake for a far better direction draft than images alone.\n\nThis does not spend credits. Only `generate_video` does.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "image_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Publicly reachable image URLs, most representative first.",
+            "minItems": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Product name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional. What the product is, in a sentence or two — feeds the direction draft."
+          },
+          "creator_note": {
+            "type": "string",
+            "description": "Optional. A short free-text note to the director: the angle, occasion or message this video should carry."
+          },
+          "brand_id": {
+            "type": "string",
+            "description": "Which brand this product belongs to, from `list_brands`. There is no page to scrape here, so nothing can detect the brand for you: confirm it with the user rather than letting it fall through to the account's default brand."
+          }
+        },
+        "required": [
+          "image_urls",
+          "name"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "get_product",
+      "title": "Get a product and its video direction",
+      "description": "Read a product: what the import found, the current video direction and\nsettings, and every video generated from it.\n\nUse this to poll after `import_product_from_url` or\n`create_product_from_images`. The product is ready to work with when\n`import_status` is \"imported\" AND `video_direction.drafting` is false.\nPoll every 20-30 seconds; the whole thing normally settles inside a\nminute.\n\n`import_status` values: \"pending\" and \"importing\" mean keep polling;\n\"imported\" means done; \"failed\" means it did not work and\n`import_failed_reason` says why.\n\n`video_direction.credit_cost` is what `generate_video` will charge for\nthe current settings.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product's id."
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      }
+    },
+    {
+      "name": "create_brand",
+      "title": "Create a brand for a product",
+      "description": "Create a new brand from the identity detected on a product that is\nwaiting on `brand_decision_required`, and attach the product to it.\n\nUse this when the product belongs to a company the account has no brand\nfor yet — the usual case when someone brings a new store. The brand's\nvoice, target market and keywords are taken from what the storefront\nscrape drafted; the user can rename it with `name`.\n\nAsk the user before calling this. It consumes one of the plan's brand\nslots, and on a plan that has run out this fails with a brand-limit\nerror — at which point the choices are to attach the product to an\nexisting brand with `set_product_brand`, to re-point an existing brand\nat this identity with `set_product_brand` and `replace_identity: true`,\nor to upgrade.\n\nOnce this returns, the video direction starts drafting: poll\n`get_product` until `video_direction.drafting` is false.\n\nThis does not spend credits.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product waiting on a brand decision."
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional. Overrides the detected storefront name for the new brand."
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "set_product_brand",
+      "title": "Attach a product to an existing brand",
+      "description": "Attach a product waiting on `brand_decision_required` to one of the\naccount's existing brands. Use `list_brands` to see them.\n\nOnly do this when the user has confirmed the product really belongs to\nthat brand. Attaching a product to an unrelated brand is not a cosmetic\nmislabel: every video is drafted in that brand's voice, to its target\nmarket, with its keywords.\n\nBy default the brand's existing identity is left untouched. Pass\n`replace_identity: true` to instead overwrite that brand's voice, target\nmarket and keywords with the identity detected on this product — the\n\"re-point my brand at a different company\" move, for an account at its\nbrand limit. This rewrites a brand every other product on it shares, so\nconfirm it with the user explicitly first.\n\nOnce this returns, the video direction starts drafting: poll\n`get_product` until `video_direction.drafting` is false.\n\nThis does not spend credits.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product waiting on a brand decision."
+          },
+          "brand_id": {
+            "type": "string",
+            "description": "The brand to attach it to, from `list_brands`."
+          },
+          "replace_identity": {
+            "type": "boolean",
+            "description": "Optional, default false. Overwrite the brand's voice, target market and keywords with this product's detected identity. Affects every product on that brand — confirm with the user."
+          }
+        },
+        "required": [
+          "product_id",
+          "brand_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "update_video_direction",
+      "title": "Edit the video direction and render settings",
+      "description": "Edit the creative direction and render settings for a product's next\nvideo. Only the fields you pass are changed; everything else keeps its\ncurrent value.\n\n`creative_direction` is the plan the render is built from. It is free\ntext, but the drafts follow a six-section shape that works well and is\nworth preserving when editing:\n\n  Hook: ...\n  Content Focus: ...\n  Format: ...\n  Execution Guidelines: ...\n  Strict Guidelines & Restrictions: ...\n\nDo not invent a direction from nothing when one has not been drafted\nyet — call `redraft_video_direction` and edit what comes back. Leaving\nit empty is also valid: generation works without a direction.\n\n`creator_note` is different and smaller: the user's own short note to\nthe director (\"mention it is machine washable\", \"for Father's Day\"). It\nis carried through to the render verbatim, so put the user's words in\nit, not your paraphrase.\n\nOnly works before generation starts. This does not spend credits.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product's id."
+          },
+          "creative_direction": {
+            "type": "string",
+            "description": "The full creative plan, max 3000 characters. Pass an empty string to clear it."
+          },
+          "creator_note": {
+            "type": "string",
+            "description": "The user's short note to the director, max 1000 characters."
+          },
+          "ratio": {
+            "type": "string",
+            "enum": [
+              "9:16",
+              "3:4",
+              "16:9",
+              "1:1"
+            ],
+            "description": "Aspect ratio. 9:16 (vertical) is the default and what social feeds want."
+          },
+          "resolution": {
+            "type": "string",
+            "enum": [
+              "480P",
+              "720P",
+              "1080P"
+            ],
+            "description": "1080P needs a paid plan; a pick above the plan's ceiling quietly becomes that ceiling (the response reports what was actually saved)."
+          },
+          "enable_audio": {
+            "type": "boolean",
+            "description": "Whether the render has sound."
+          },
+          "target_market": {
+            "type": "string",
+            "description": "Free text, e.g. \"US/North America\" or \"Japan\". Drives the spoken language unless one is set explicitly. Saved on the brand, so it carries to later videos."
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "redraft_video_direction",
+      "title": "Draft a new creative direction",
+      "description": "Ask InstantClips to draft a fresh creative direction for this product's\nnext video, using the product's facts, its images and the brand's\nidentity. Use it to get a first draft, or to try a different angle when\nthe user does not like the current one.\n\nThis OVERWRITES the current direction — including any edits. Confirm with\nthe user before re-rolling a direction they have already worked on.\n\nThe draft runs in the background: this returns with `drafting` true, and\nyou poll `get_product` until `video_direction.drafting` is false (a few\nseconds). Rolling a fresh angle is the point, so calling it twice gives\ntwo different drafts, not the same one.\n\nThis does not spend credits.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product's id."
+          },
+          "format": {
+            "type": "string",
+            "description": "Optional. Pin a specific video format instead of letting the drafter pick one — e.g. \"unboxing\", \"before_after\". Unknown values are ignored, so leave it out unless the user asked for a particular kind of video."
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "generate_video",
+      "title": "Generate the video (spends credits)",
+      "description": "Render the video. THIS SPENDS THE USER'S CREDITS.\n\nAsk the user before calling this, every time. Tell them the cost first —\n`get_product` reports it as `video_direction.credit_cost`, and the\nuser's balance as `credits_remaining`. Credits are charged at launch,\nnot on completion; a failed render is refunded automatically.\n\nShow the user the creative direction and let them approve or edit it\nbefore you call this. Do not call it to \"see what happens\", to retry a\nrender that is still in progress, or as part of a batch you decided on\nyour own.\n\nReturns as soon as the render is queued. Poll `get_video` with the\nreturned video_request_id every 20-30 seconds until its status is\n\"done\" (a few minutes), then give the user `output_url` and\n`share_url`.\n\nIf the account cannot afford it, nothing is charged and the response\nsays so — tell the user to top up at the credits page rather than\nretrying.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product to render. Its current direction and settings are used as-is."
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false
+      }
+    },
+    {
+      "name": "get_video",
+      "title": "Check a video's render status",
+      "description": "Check one video's render.\n\n`status` values:\n  \"generating\" — still rendering, keep polling every 20-30 seconds.\n  \"done\" — finished; `output_url` is the MP4 and `share_url` is a\n           public page to send someone.\n  \"failed\" — `failed_reason` says why. The credits were refunded\n             automatically; the user can retry from the product page.\n  \"insufficient_credit\" — never launched; nothing was charged.\n  \"pending\" — not launched yet; call `generate_video`.\n\nA render normally takes a few minutes. Tell the user what you are\nwaiting on rather than polling silently in a tight loop.\n",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "video_request_id": {
+            "type": "string",
+            "description": "Returned by generate_video, and listed under `videos` in get_product."
+          }
+        },
+        "required": [
+          "video_request_id"
+        ],
+        "type": "object"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      }
+    }
+  ]
+}

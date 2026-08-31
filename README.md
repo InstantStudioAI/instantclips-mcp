@@ -9,8 +9,9 @@ does: import a product, draft the creative direction, and render the video.
 
 **The product server stays hosted.** This repository contains its connection guide, registry
 metadata, example HTTP client and a small open-source stdio adapter for clients that cannot connect
-to a remote server directly. The adapter only carries MCP messages to the hosted endpoint; the
-tool definitions and product implementation remain in one place.
+to a remote server directly. The adapter answers initialization, ping and tool discovery from a
+generated snapshot, then sends authenticated tool calls to the hosted endpoint. The hosted server
+remains the source of truth; the product implementation is not duplicated here.
 
 ## Endpoint
 
@@ -54,8 +55,9 @@ and export it in your shell instead.
 
 ### Stdio-only clients and headless runners
 
-The `instantclips-mcp` npm package is a thin stdio-to-HTTPS adapter. It reads the token from the
-environment, fixes the upstream endpoint to InstantClips and forwards the protocol unchanged:
+The `instantclips-mcp` npm package is a thin stdio-to-HTTPS adapter. It serves initialization and
+tool discovery locally for a fast, credential-free cold start, then reads the token from the
+environment and sends tool calls to InstantClips:
 
 ```json
 {
@@ -78,7 +80,8 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 ```
 
 The token is accepted only through `INSTANTCLIPS_TOKEN`, never as a command-line argument, so it
-does not appear in the process list. Node.js 20 or newer is required.
+does not appear in the process list. It is required for tool calls, but not for `initialize`,
+`ping`, or `tools/list`. Node.js 20 or newer is required.
 
 ### Cursor and VS Code
 
@@ -116,9 +119,12 @@ Brands work the same way: `list_brands`, `create_brand`, `set_product_brand`. Ev
 drafted in a brand's voice, so an import whose storefront matches no existing brand stops and asks
 rather than guessing.
 
-Each tool's exact parameters are published by the server itself. This repository deliberately does
-not restate them — run `python example.py tools` below to print the live schemas, so what you build
-against cannot drift from what the server accepts.
+Each tool's exact parameters are published by the hosted server. The generated
+[`manifest/instantclips-mcp.json`](manifest/instantclips-mcp.json) snapshot lets stdio clients and
+registries inspect those same schemas without a credential. Maintainers refresh it with
+`INSTANTCLIPS_TOKEN="..." npm run sync:manifest`; `npm run check:manifest` fails when the committed
+snapshot differs from the live server. Run `python example.py tools` below when you specifically
+want to print the live schemas over HTTP.
 
 ## Credits
 
@@ -170,8 +176,11 @@ of the repository — `.gitignore` covers `*.pem`, and a committed private key i
 
 `glama.json` is the separate, Glama-specific file that claims the listing there. A server under an
 organisation rather than a personal account can only be claimed with that file present.
-It carries ownership only: configure Glama's build as `npm ci`, run
-`node bin/instantclips-mcp.js`, and supply `INSTANTCLIPS_TOKEN` as a secret in the server admin UI.
+It carries ownership only. In Glama's Dockerfile form, use build steps
+`["npm install --omit=dev"]`, CMD arguments `["node", "./bin/instantclips-mcp.js"]`, and any dummy
+value for the required `INSTANTCLIPS_TOKEN` placeholder. Glama's initialization and tool-quality
+checks use the bundled manifest and never transmit that placeholder upstream. Do not put a real
+account token into a third-party build sandbox.
 
 ## License
 

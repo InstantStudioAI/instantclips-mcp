@@ -7,12 +7,19 @@ import {
   StreamableHTTPClientTransport,
   UnauthorizedError,
 } from "@modelcontextprotocol/client";
+import { Server } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 
 const DEFAULT_ENDPOINT = "https://app.instantclips.ai/mcp";
 const SETTINGS_URL = "https://app.instantclips.ai/settings#ai-access";
 const packageJson = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+);
+const manifest = JSON.parse(
+  readFileSync(
+    new URL("../manifest/instantclips-mcp.json", import.meta.url),
+    "utf8",
+  ),
 );
 const VERSION = packageJson.version;
 
@@ -28,15 +35,15 @@ Usage:
   instantclips-mcp --version
 
 Environment:
-  INSTANTCLIPS_TOKEN    Required bearer token. Create one at ${SETTINGS_URL}
+  INSTANTCLIPS_TOKEN    Bearer token required for tool calls. Create one at ${SETTINGS_URL}
 
-The upstream endpoint is ${DEFAULT_ENDPOINT}.
+Initialization and tool discovery work offline. Tool calls use ${DEFAULT_ENDPOINT}.
 `;
 }
 
-function configuration(env = process.env) {
+function configuration(env = process.env, { requireToken = true } = {}) {
   const token = env.INSTANTCLIPS_TOKEN?.trim();
-  if (!token) {
+  if (!token && requireToken) {
     throw new CliError(
       "missing_token",
       `INSTANTCLIPS_TOKEN is required. Create a token at ${SETTINGS_URL}.`,
@@ -72,37 +79,25 @@ function configuration(env = process.env) {
 }
 
 function remoteTransport({ endpoint, token }) {
+  if (!token) {
+    throw new CliError(
+      "missing_token",
+      `INSTANTCLIPS_TOKEN is required for tool calls. Create a token at ${SETTINGS_URL}.`,
+      78,
+    );
+  }
   return new StreamableHTTPClientTransport(endpoint, {
     authProvider: { token: async () => token },
   });
 }
 
-function isRequest(message) {
-  return Boolean(
-    message &&
-      !Array.isArray(message) &&
-      typeof message === "object" &&
-      typeof message.method === "string" &&
-      Object.hasOwn(message, "id"),
-  );
-}
-
-function isResponse(message) {
-  return Boolean(
-    message &&
-      !Array.isArray(message) &&
-      typeof message === "object" &&
-      Object.hasOwn(message, "id") &&
-      (Object.hasOwn(message, "result") || Object.hasOwn(message, "error")),
-  );
-}
-
 function safeFailure(error, token) {
+  if (error instanceof CliError) {
+    return { code: error.code, message: error.message };
+  }
   const status = error?.data?.status;
-  const text = String(error?.message || error || "Unknown error").replaceAll(
-    token,
-    "[redacted]",
-  );
+  const rawText = String(error?.message || error || "Unknown error");
+  const text = token ? rawText.replaceAll(token, "[redacted]") : rawText;
 
   if (
     error instanceof UnauthorizedError ||
@@ -136,9 +131,51 @@ function writeDiagnostic(failure) {
 
 async function startBridge(config) {
   const stdio = new StdioServerTransport();
-  const remote = remoteTransport(config);
-  const initializeRequestIds = new Set();
+  const server = new Server(manifest.serverInfo, {
+    capabilities: manifest.capabilities,
+    instructions: manifest.instructions,
+  });
+  let remoteClient;
+  let remoteClientPromise;
   let closing = false;
+
+  const connectRemote = () => {
+    if (!remoteClientPromise) {
+      remoteClientPromise = (async () => {
+        const client = new Client({
+          name: "instantclips-mcp-stdio-adapter",
+          version: VERSION,
+        });
+        try {
+          await client.connect(remoteTransport(config));
+          remoteClient = client;
+          return client;
+        } catch (error) {
+          await client.close().catch(() => {});
+          remoteClientPromise = undefined;
+          throw error;
+        }
+      })();
+    }
+    return remoteClientPromise;
+  };
+
+  server.setRequestHandler("tools/list", async () => ({
+    tools: manifest.tools,
+  }));
+
+  server.setRequestHandler("tools/call", async (request) => {
+    try {
+      const client = await connectRemote();
+      return await client.callTool(request.params);
+    } catch (error) {
+      const failure = safeFailure(error, config.token);
+      return {
+        content: [{ type: "text", text: failure.message }],
+        isError: true,
+      };
+    }
+  });
 
   const shutdown = async (exitCode = process.exitCode || 0) => {
     if (closing) return;
@@ -148,68 +185,18 @@ async function startBridge(config) {
     process.stdin.off("close", onStdinEnd);
     process.off("SIGINT", onSigint);
     process.off("SIGTERM", onSigterm);
-    await Promise.allSettled([remote.close(), stdio.close()]);
+    await Promise.allSettled([remoteClient?.close(), server.close()]);
   };
 
   const onStdinEnd = () => void shutdown();
   const onSigint = () => void shutdown(130);
   const onSigterm = () => void shutdown(143);
-
-  stdio.onmessage = (message) => {
-    if (isRequest(message) && message.method === "initialize") {
-      initializeRequestIds.add(message.id);
-    }
-
-    void remote.send(message).catch(async (error) => {
-      if (isRequest(message)) {
-        initializeRequestIds.delete(message.id);
-        const failure = safeFailure(error, config.token);
-        await stdio
-          .send({
-            jsonrpc: "2.0",
-            id: message.id,
-            error: {
-              code: -32000,
-              message: failure.message,
-              data: { code: failure.code },
-            },
-          })
-          .catch((sendError) => {
-            writeDiagnostic(safeFailure(sendError, config.token));
-            void shutdown(74);
-          });
-      }
-    });
-  };
-
-  remote.onmessage = (message) => {
-    if (isResponse(message) && initializeRequestIds.delete(message.id)) {
-      const protocolVersion = message.result?.protocolVersion;
-      if (typeof protocolVersion === "string") {
-        remote.setProtocolVersion(protocolVersion);
-      }
-    }
-    void stdio.send(message).catch((error) => {
-      writeDiagnostic(safeFailure(error, config.token));
-      void shutdown(74);
-    });
-  };
-
-  remote.onerror = (error) => writeDiagnostic(safeFailure(error, config.token));
-  remote.onclose = () => void shutdown();
-  stdio.onerror = (error) => {
-    writeDiagnostic(safeFailure(error, config.token));
-    void shutdown(74);
-  };
-  stdio.onclose = () => void shutdown();
-
   process.stdin.once("end", onStdinEnd);
   process.stdin.once("close", onStdinEnd);
   process.once("SIGINT", onSigint);
   process.once("SIGTERM", onSigterm);
 
-  await remote.start();
-  await stdio.start();
+  await server.connect(stdio);
 }
 
 async function checkConnection(config, json) {
@@ -286,7 +273,7 @@ async function main(args) {
 
   let config;
   try {
-    config = configuration();
+    config = configuration(process.env, { requireToken: check });
   } catch (error) {
     if (check && json && error instanceof CliError) {
       process.stdout.write(

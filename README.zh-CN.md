@@ -8,8 +8,9 @@ VS Code、Claude 应用、ChatGPT 或其他任何 MCP 客户端都能完成网�
 起草创意方向并渲染视频。
 
 **产品服务器仍以托管方式运行。** 本仓库包含连接指南、注册表元数据、示例 HTTP 客户端，以及一个
-面向无法直接连接远程服务器的客户端的小型开源 stdio 适配器。适配器只负责将 MCP 消息转发到托管
-端点；工具定义和产品实现仍然只保留在一个地方。
+面向无法直接连接远程服务器的客户端的小型开源 stdio 适配器。适配器通过生成的快照在本地响应
+初始化、ping 和工具发现，只有经过身份验证的工具调用才会发送到托管端点。托管服务器仍是唯一的
+事实来源；本仓库不会复制产品实现。
 
 ## 端点
 
@@ -52,8 +53,8 @@ http_headers = { Authorization = "Bearer YOUR_TOKEN" }
 
 ### 仅支持 stdio 的客户端和无界面自动化
 
-`instantclips-mcp` npm 软件包是一个轻量的 stdio 到 HTTPS 适配器。它从环境变量读取令牌，将上游
-端点固定为 InstantClips，并原样转发协议消息：
+`instantclips-mcp` npm 软件包是一个轻量的 stdio 到 HTTPS 适配器。它在本地提供初始化和工具发现，
+从而无需凭据即可快速启动；随后从环境变量读取令牌，并将工具调用发送到 InstantClips：
 
 ```json
 {
@@ -76,7 +77,7 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 ```
 
 令牌只能通过 `INSTANTCLIPS_TOKEN` 提供，不能作为命令行参数传入，因此不会出现在进程列表中。
-需要 Node.js 20 或更高版本。
+工具调用需要令牌，但 `initialize`、`ping` 和 `tools/list` 不需要。需要 Node.js 20 或更高版本。
 
 ### Cursor 和 VS Code
 
@@ -112,8 +113,12 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 的表达风格进行起草。因此，当导入商品的店铺与任何现有品牌都不匹配时，流程会暂停并询问，而不是
 自行猜测。
 
-每个工具的确切参数均由服务器自身发布。本仓库有意不重复列出这些参数；请运行下方的
-`python example.py tools` 来输出实时 schema，确保你构建的集成始终与服务器实际接受的参数一致。
+每个工具的确切参数均由托管服务器发布。生成的
+[`manifest/instantclips-mcp.json`](manifest/instantclips-mcp.json) 快照让 stdio 客户端和注册表无需
+凭据即可检查同一组 schema。维护者使用
+`INSTANTCLIPS_TOKEN="..." npm run sync:manifest` 更新快照；如果已提交的快照与线上服务器不同，
+`npm run check:manifest` 会失败。如需通过 HTTP 输出实时 schema，请运行下方的
+`python example.py tools`。
 
 ## 点数
 
@@ -163,8 +168,11 @@ npm 软件包中的 `mcpName` 必须与该注册表名称完全一致。仓库�
 
 `glama.json` 是 Glama 专用的独立文件，用于认领该平台上的条目。归属于组织而非个人账户的服务器，
 只有在该文件存在时才能完成认领。
-该文件只用于证明所有权：在 Glama 中将构建命令设置为 `npm ci`，运行
-`node bin/instantclips-mcp.js`，并在服务器管理界面中将 `INSTANTCLIPS_TOKEN` 配置为密钥。
+该文件只用于证明所有权。在 Glama 的 Dockerfile 表单中，将构建步骤设为
+`["npm install --omit=dev"]`，将 CMD 参数设为
+`["node", "./bin/instantclips-mcp.js"]`，并为必填的 `INSTANTCLIPS_TOKEN` 占位参数填写任意虚拟值。
+Glama 的初始化与工具质量检查只读取随包提供的清单，不会将该占位值发送到托管服务器。请勿把真实
+账户令牌放入第三方构建沙箱。
 
 ## 许可证
 

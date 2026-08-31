@@ -10,9 +10,10 @@ dirección creativa y renderizar el vídeo.
 
 **El servidor del producto permanece alojado.** Este repositorio contiene su guía de conexión, los
 metadatos de registro, un cliente HTTP de ejemplo y un pequeño adaptador stdio de código abierto
-para los clientes que no pueden conectarse directamente a un servidor remoto. El adaptador se
-limita a transportar mensajes MCP al endpoint alojado; las definiciones de las herramientas y la
-implementación del producto permanecen en un único lugar.
+para los clientes que no pueden conectarse directamente a un servidor remoto. El adaptador responde
+localmente a la inicialización, al ping y al descubrimiento de herramientas desde una instantánea
+generada, y envía al endpoint alojado únicamente las llamadas autenticadas. El servidor alojado
+sigue siendo la fuente de verdad; la implementación del producto no se duplica aquí.
 
 ## Endpoint
 
@@ -59,8 +60,9 @@ Para no guardar el token en el archivo, sustituye el encabezado por
 
 ### Clientes que solo admiten stdio y procesos sin interfaz
 
-El paquete npm `instantclips-mcp` es un adaptador ligero de stdio a HTTPS. Lee el token del entorno,
-fija InstantClips como endpoint de destino y reenvía el protocolo sin modificarlo:
+El paquete npm `instantclips-mcp` es un adaptador ligero de stdio a HTTPS. Sirve localmente la
+inicialización y el descubrimiento de herramientas para arrancar rápido y sin credenciales; después
+lee el token del entorno y envía las llamadas de herramientas a InstantClips:
 
 ```json
 {
@@ -84,7 +86,8 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 ```
 
 El token solo se acepta mediante `INSTANTCLIPS_TOKEN`, nunca como argumento de línea de comandos,
-por lo que no aparece en la lista de procesos. Se requiere Node.js 20 o posterior.
+por lo que no aparece en la lista de procesos. Es obligatorio para llamar a una herramienta, pero
+no para `initialize`, `ping` ni `tools/list`. Se requiere Node.js 20 o posterior.
 
 ### Cursor y VS Code
 
@@ -124,10 +127,12 @@ Las marcas funcionan de la misma manera: `list_brands`, `create_brand`, `set_pro
 vídeo se prepara con la voz de una marca; por eso, si el escaparate de un producto importado no
 coincide con ninguna marca existente, el proceso se detiene y pregunta en lugar de adivinar.
 
-El propio servidor publica los parámetros exactos de cada herramienta. Este repositorio no los
-repite deliberadamente: ejecuta `python example.py tools`, como se indica abajo, para mostrar los
-esquemas actuales. Así, lo que construyas no puede quedar desfasado respecto a lo que acepta el
-servidor.
+El servidor alojado publica los parámetros exactos de cada herramienta. La instantánea generada
+[`manifest/instantclips-mcp.json`](manifest/instantclips-mcp.json) permite que clientes stdio y
+registros inspeccionen los mismos esquemas sin credenciales. Quienes mantienen el repositorio la
+actualizan con `INSTANTCLIPS_TOKEN="..." npm run sync:manifest`; `npm run check:manifest` falla si
+la copia incluida difiere del servidor en producción. Ejecuta `python example.py tools` cuando
+quieras imprimir específicamente los esquemas actuales mediante HTTP.
 
 ## Créditos
 
@@ -185,9 +190,12 @@ commit es una clave publicada.
 `glama.json` es el archivo independiente y específico de Glama que permite reclamar allí la ficha.
 Un servidor perteneciente a una organización, en lugar de una cuenta personal, solo puede
 reclamarse si ese archivo está presente.
-El archivo solo acredita la propiedad: configura `npm ci` como compilación en Glama, ejecuta
-`node bin/instantclips-mcp.js` y proporciona `INSTANTCLIPS_TOKEN` como secreto desde la interfaz de
-administración del servidor.
+El archivo solo acredita la propiedad. En el formulario Dockerfile de Glama, usa
+`["npm install --omit=dev"]` como pasos de compilación,
+`["node", "./bin/instantclips-mcp.js"]` como argumentos de CMD y cualquier valor ficticio para el
+marcador obligatorio `INSTANTCLIPS_TOKEN`. Las comprobaciones de inicialización y calidad de Glama
+usan el manifiesto incluido y nunca envían ese valor al servidor alojado. No introduzcas un token
+real de una cuenta en el entorno de compilación de un tercero.
 
 ## Licencia
 

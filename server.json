@@ -3,7 +3,7 @@
   "name": "ai.instantclips/instantclips",
   "title": "InstantClips",
   "description": "Create branded vertical video ads from ecommerce product URLs or product photos.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "websiteUrl": "https://instantclips.ai/automate/",
   "repository": {
     "url": "https://github.com/InstantStudioAI/instantclips-mcp",
@@ -36,7 +36,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "instantclips-mcp",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "transport": {
         "type": "stdio"
       },

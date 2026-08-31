@@ -153,7 +153,73 @@ function jsonLineReader(stream) {
   };
 }
 
-test("proxies stdio requests to Streamable HTTP without changing the tool surface", async (t) => {
+test("serves initialization and the bundled tool manifest without contacting upstream", async (t) => {
+  const mock = await mockMcpServer({ rejectToken: true });
+  t.after(mock.close);
+  const run = runCli([], {
+    INSTANTCLIPS_MCP_URL: mock.url,
+    INSTANTCLIPS_TOKEN: "placeholder-token",
+  });
+  t.after(() => run.child.kill());
+  const nextMessage = jsonLineReader(run.child.stdout);
+
+  run.child.stdin.write(
+    `${JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
+    })}\n`,
+  );
+  const initialized = await nextMessage();
+  assert.equal(initialized.id, 1);
+  assert.equal(initialized.result.serverInfo.name, "instantclips");
+  assert.equal(initialized.result.serverInfo.version, "0.2.0");
+  assert.deepEqual(initialized.result.capabilities, { tools: {} });
+  assert.match(initialized.result.instructions, /generate_video/);
+
+  run.child.stdin.write(
+    `${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`,
+  );
+  run.child.stdin.write(
+    `${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })}\n`,
+  );
+  const listed = await nextMessage();
+  assert.deepEqual(
+    listed.result.tools.map((tool) => tool.name),
+    [
+      "list_brands",
+      "import_product_from_url",
+      "create_product_from_images",
+      "get_product",
+      "create_brand",
+      "set_product_brand",
+      "update_video_direction",
+      "redraft_video_direction",
+      "generate_video",
+      "get_video",
+    ],
+  );
+
+  run.child.stdin.write(
+    `${JSON.stringify({ jsonrpc: "2.0", id: 3, method: "ping", params: {} })}\n`,
+  );
+  const pinged = await nextMessage();
+  assert.deepEqual(pinged.result, {});
+
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(mock.requests, []);
+
+  run.child.stdin.end();
+  assert.deepEqual(await run.exited, { code: 0, signal: null });
+  assert.equal(run.output().stderr, "");
+});
+
+test("proxies tool calls to the hosted server after local discovery", async (t) => {
   const mock = await mockMcpServer();
   t.after(mock.close);
   const run = runCli([], { INSTANTCLIPS_MCP_URL: mock.url });
@@ -172,22 +238,14 @@ test("proxies stdio requests to Streamable HTTP without changing the tool surfac
       },
     })}\n`,
   );
-  const initialized = await nextMessage();
-  assert.equal(initialized.id, 1);
-  assert.equal(initialized.result.serverInfo.name, "instantclips-test");
-
+  await nextMessage();
   run.child.stdin.write(
     `${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`,
   );
   run.child.stdin.write(
     `${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })}\n`,
   );
-  const listed = await nextMessage();
-  assert.deepEqual(
-    listed.result.tools.map((tool) => tool.name),
-    ["list_brands", "generate_video"],
-  );
-
+  await nextMessage();
   run.child.stdin.write(
     `${JSON.stringify({
       jsonrpc: "2.0",
@@ -207,11 +265,14 @@ test("proxies stdio requests to Streamable HTTP without changing the tool surfac
       (request) => request.headers.authorization === "Bearer test-token",
     ),
   );
-
-  const listRequest = mock.requests.find(
-    (request) => request.message?.method === "tools/list",
+  assert.equal(
+    mock.requests.some((request) => request.message?.method === "tools/list"),
+    false,
   );
-  assert.equal(listRequest.headers["mcp-protocol-version"], "2025-06-18");
+  assert.equal(
+    mock.requests.some((request) => request.message?.method === "tools/call"),
+    true,
+  );
 });
 
 test("returns authentication failures in-band without exposing the token", async (t) => {
@@ -233,11 +294,23 @@ test("returns authentication failures in-band without exposing the token", async
       },
     })}\n`,
   );
+  await nextMessage();
+  run.child.stdin.write(
+    `${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`,
+  );
+  run.child.stdin.write(
+    `${JSON.stringify({
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/call",
+      params: { name: "list_brands", arguments: {} },
+    })}\n`,
+  );
 
   const response = await nextMessage();
-  assert.equal(response.id, 1);
-  assert.equal(response.error.code, -32000);
-  assert.equal(response.error.data.code, "authentication_failed");
+  assert.equal(response.id, 2);
+  assert.equal(response.result.isError, true);
+  assert.match(response.result.content[0].text, /authentication failed/i);
   assert.doesNotMatch(JSON.stringify(response), /test-token/);
 
   run.child.stdin.end();
@@ -277,13 +350,46 @@ test("returns a stable authentication failure from the health check", async (t) 
   assert.doesNotMatch(run.output().stderr, /test-token/);
 });
 
-test("fails before starting stdio when the token is missing", async () => {
+test("allows offline discovery when the token is missing and rejects only tool calls", async (t) => {
   const run = runCli([], { INSTANTCLIPS_TOKEN: "" });
-  const exit = await run.exited;
+  t.after(() => run.child.kill());
+  const nextMessage = jsonLineReader(run.child.stdout);
 
-  assert.deepEqual(exit, { code: 78, signal: null });
-  assert.equal(run.output().stdout, "");
-  assert.match(run.output().stderr, /INSTANTCLIPS_TOKEN is required/);
+  run.child.stdin.write(
+    `${JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "test-client", version: "1.0.0" },
+      },
+    })}\n`,
+  );
+  assert.equal((await nextMessage()).result.serverInfo.name, "instantclips");
+  run.child.stdin.write(
+    `${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`,
+  );
+  run.child.stdin.write(
+    `${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })}\n`,
+  );
+  assert.equal((await nextMessage()).result.tools.length, 10);
+  run.child.stdin.write(
+    `${JSON.stringify({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: { name: "list_brands", arguments: {} },
+    })}\n`,
+  );
+  const called = await nextMessage();
+  assert.equal(called.result.isError, true);
+  assert.match(called.result.content[0].text, /required for tool calls/);
+
+  run.child.stdin.end();
+  assert.deepEqual(await run.exited, { code: 0, signal: null });
+  assert.equal(run.output().stderr, "");
 });
 
 test("reports missing configuration as JSON when requested", async () => {
@@ -307,13 +413,34 @@ test("package and registry identities keep the domain-authenticated namespace", 
   const serverJson = JSON.parse(
     await readFile(new URL("../server.json", import.meta.url), "utf8"),
   );
+  const manifest = JSON.parse(
+    await readFile(
+      new URL("../manifest/instantclips-mcp.json", import.meta.url),
+      "utf8",
+    ),
+  );
 
   assert.equal(packageJson.mcpName, "ai.instantclips/instantclips");
   assert.equal(packageJson.mcpName, serverJson.name);
-  assert.equal(serverJson.version, "1.1.0");
+  assert.equal(serverJson.version, "1.2.0");
   assert.equal(serverJson.remotes.length, 1);
   assert.equal(serverJson.packages.length, 1);
   assert.equal(serverJson.packages[0].identifier, packageJson.name);
   assert.equal(serverJson.packages[0].version, packageJson.version);
   assert.equal(serverJson.packages[0].transport.type, "stdio");
+  assert.equal(manifest.serverInfo.name, "instantclips");
+  assert.equal(manifest.tools.length, 10);
+  assert.equal(
+    new Set(manifest.tools.map((tool) => tool.name)).size,
+    manifest.tools.length,
+  );
+  assert.ok(
+    manifest.tools.every(
+      (tool) => tool.description && tool.inputSchema?.type === "object",
+    ),
+  );
+  const generate = manifest.tools.find((tool) => tool.name === "generate_video");
+  assert.equal(generate.annotations.readOnlyHint, false);
+  assert.equal(generate.annotations.idempotentHint, false);
+  assert.match(generate.description, /SPENDS THE USER'S CREDITS/);
 });
