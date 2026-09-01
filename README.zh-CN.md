@@ -22,8 +22,8 @@ VS Code、Claude 应用、ChatGPT 或其他任何 MCP 客户端都能完成网�
 | 身份验证 | `Authorization: Bearer <token>`            |
 
 前往 **[app.instantclips.ai/settings#ai-access](https://app.instantclips.ai/settings#ai-access)**
-生成令牌。该令牌关联你自己的账户，可访问与网页应用相同的品牌、商品、点数和方案限额。如果你还没有
-账户，登录时会自动创建账户，并赠送可用于开始体验的免费点数。
+生成令牌。该令牌关联你自己的账户，可访问与网页应用相同的品牌、商品、算力和方案限额。如果你还没有
+账户，登录时会自动创建账户，并赠送可用于开始体验的免费算力。
 
 在浏览器中打开端点时会显示设置页面，而不是协议错误；页面上的一键安装按钮会自动为你填入令牌。
 
@@ -120,9 +120,9 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 `npm run check:manifest` 会失败。如需通过 HTTP 输出实时 schema，请运行下方的
 `python example.py tools`。
 
-## 点数
+## 算力
 
-导入商品、起草创意方向和编辑方向均为**免费**。只有 `generate_video` 会消耗点数，而且必须获得你
+导入商品、起草创意方向和编辑方向均为**免费**。只有 `generate_video` 会消耗算力，而且必须获得你
 的明确许可；工具会事先报告费用。智能体无法在你不知情的情况下产生费用。详见
 [价格](https://instantclips.ai/#pricing)。
 
@@ -162,7 +162,7 @@ npm 软件包中的 `mcpName` 必须与该注册表名称完全一致。仓库�
 使用 GitHub 身份验证。改用 GitHub 身份验证会强制使用 `io.github.instantstudioai/...`，从而失去
 品牌命名空间。
 
-请先发布 npm 软件包，再增加 `version`，并运行 `mcp-publisher publish` 重新发布同一个注册表条目。
+先提升 `version` 并发布 npm 软件包，然后运行 `mcp-publisher publish` 重新发布同一注册表条目。
 域名身份验证会保留品牌命名空间 `ai.instantclips`；请勿将其替换为 `io.github.*` 名称。签名密钥不
 存放在仓库中：`.gitignore` 已忽略 `*.pem`，因为一旦提交私钥，就等于公开了私钥。
 
