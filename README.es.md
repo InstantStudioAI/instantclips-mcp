@@ -7,8 +7,25 @@
 [InstantClips](https://instantclips.ai) convierte un producto de comercio electrónico en vídeos
 verticales cortos para TikTok, Instagram Reels y Stories. Funciona como un **servidor MCP alojado**,
 por lo que Claude Code, Codex, Cursor, VS Code, la aplicación de Claude, ChatGPT o cualquier otro
-cliente MCP pueden hacer lo mismo que la aplicación web: importar un producto, preparar la
-dirección creativa y renderizar el vídeo.
+cliente MCP pueden hacer lo mismo que la aplicación web: importar un producto, preparar el plan y
+generar el vídeo.
+
+**No es un generador de texto a vídeo.** InstantClips lee la página del producto (fotos, precio,
+detalles) y construye el anuncio a partir de lo que realmente hay allí. El plan se escribe primero
+y se te muestra; el vídeo sigue el plan. Por eso resulta lo bastante económico para recorrer un
+catálogo entero, y por eso el resultado es el producto que vendes y no una suposición.
+
+Gratis para empezar: los créditos de bienvenida cubren el primer vídeo y no hace falta introducir
+ninguna tarjeta. Después, paquetes de créditos de pago único o una membresía Agency para quien
+gestiona varias marcas. Consulta los [precios](https://instantclips.ai/#pricing).
+
+- **Dónde encaja.** Junto a un programador de publicaciones (Postiz, Buffer) que publique lo que
+  se genera. Junto a una herramienta de atribución que te diga qué gancho funcionó. En lugar de un
+  editor cuando tienes una página de producto y ningún metraje.
+- **Para qué no sirve.** Películas cinematográficas de marca. Un presentador leyendo tu guion.
+  4K horizontal. Productos sin página y sin fotos.
+- **Pensado para.** Vendedores de Shopify, dropshippers, marcas y agencias que llevan las redes de
+  varias tiendas a la vez.
 
 **El servidor del producto permanece alojado.** Este repositorio contiene su guía de conexión, los
 metadatos de registro, un cliente HTTP de ejemplo y un pequeño adaptador stdio de código abierto
@@ -19,32 +36,40 @@ sigue siendo la fuente de verdad; la implementación del producto no se duplica 
 
 ## Endpoint
 
-|            |                                            |
-| ---------- | ------------------------------------------ |
-| Endpoint   | `https://app.instantclips.ai/mcp`          |
-| Transporte | Streamable HTTP, sin estado                |
-| Método     | `POST`, JSON-RPC 2.0                       |
-| Auth       | `Authorization: Bearer <token>`            |
+|            |                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| Endpoint   | `https://app.instantclips.ai/mcp`                                                                 |
+| Transporte | Streamable HTTP, sin estado                                                                       |
+| Método     | `POST`, JSON-RPC 2.0                                                                              |
+| Auth       | Inicio de sesión cuando el cliente lo pida (OAuth 2.1), o `Authorization: Bearer <token>` para procesos sin navegador |
 
-Genera un token en **[app.instantclips.ai/settings#ai-access](https://app.instantclips.ai/settings#ai-access)**.
-El token da acceso a tu propia cuenta: las mismas marcas, productos, créditos y límites del plan
-que en la aplicación web. Al iniciar sesión se crea una cuenta si todavía no tienes una, con
-créditos gratuitos para empezar.
+Pega una sola dirección en tu asistente e inicia sesión cuando te lo pida. Esa es toda la
+configuración. La primera vez que llama, el servidor te lleva a iniciar sesión en InstantClips y a
+autorizar al asistente; no hay claves que copiar. Cada asistente que autorizas aparece en
+**Aplicaciones autorizadas** dentro de los ajustes, donde puedes desconectarlo.
 
-Al abrir el endpoint en un navegador, aparece la página de configuración en lugar de un error de
-protocolo, con botones de instalación de un clic que introducen el token por ti.
+La conexión es con tu propia cuenta: las mismas marcas, productos, créditos y límites del plan que
+en la aplicación web. Al iniciar sesión se crea una cuenta si todavía no tienes una, con créditos
+para el primer vídeo.
+
+Al abrir el endpoint en un navegador aparece la
+[página de configuración](https://app.instantclips.ai/mcp) en lugar de un error de protocolo, con
+botones de instalación de un clic para Cursor y VS Code.
 
 ## Instalación
 
-Conéctate directamente al endpoint alojado siempre que tu cliente admita Streamable HTTP. Usa el
-adaptador stdio descrito abajo solo para clientes y procesos automatizados que requieran un comando
-local.
+Conéctate directamente al endpoint alojado siempre que tu cliente admita Streamable HTTP; te
+guiará por el inicio de sesión la primera vez. Usa un token y el adaptador stdio (en «¿Sin
+navegador?», más abajo) solo para scripts y procesos automatizados que no pueden abrir una página
+de inicio de sesión.
 
 ### Claude Code
 
 ```bash
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
+claude mcp add --transport http instantclips https://app.instantclips.ai/mcp
 ```
+
+Después ejecuta `/mcp` dentro de Claude Code y elige InstantClips para iniciar sesión.
 
 ### Codex
 
@@ -54,13 +79,59 @@ la extensión del IDE:
 ```toml
 [mcp_servers.instantclips]
 url = "https://app.instantclips.ai/mcp"
+```
+
+Después ejecuta `codex mcp login instantclips` para iniciar sesión.
+
+### Cursor y VS Code
+
+La [página de configuración](https://app.instantclips.ai/mcp) incluye botones de instalación de un
+clic. Abren la aplicación, añaden InstantClips y te piden iniciar sesión la primera vez.
+
+### Aplicación de Claude y ChatGPT
+
+Aplicación de Claude: añade un conector personalizado con esta dirección e inicia sesión cuando te
+lo pida. ChatGPT en la web: activa el modo de desarrollador en Ajustes, Apps, Avanzado y añade la
+dirección como conector; en un espacio de trabajo Business o Enterprise, un administrador la
+publica como aplicación para todo el equipo. La aplicación de escritorio de ChatGPT acepta la misma
+dirección en Ajustes, Servidores MCP, y la comparte con Codex.
+
+### Cualquier otro cliente o agente MCP
+
+OpenClaw, Hermes o un agente que hayas creado: conéctalo a la dirección mediante Streamable HTTP.
+El servidor anuncia su flujo de inicio de sesión de la forma estándar, así que un cliente que siga
+la especificación no necesita nada más. Lo que no pueda abrir una página de inicio de sesión usa un
+token, como se explica a continuación.
+
+### ¿Sin navegador? Usa un token de acceso
+
+Los scripts, los trabajos de CI y los agentes que no pueden abrir una página de inicio de sesión se
+autentican con un token de larga duración. Genera uno en
+**[app.instantclips.ai/settings#ai-access](https://app.instantclips.ai/settings#ai-access)**. Da
+acceso completo a tu cuenta, así que mantenlo fuera de cualquier cosa que subas a un repositorio.
+
+Con un token, los mismos clientes quedan así:
+
+```bash
+# Claude Code
+claude mcp add --transport http instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
+```
+
+```toml
+# Codex, en ~/.codex/config.toml
+[mcp_servers.instantclips]
+url = "https://app.instantclips.ai/mcp"
 http_headers = { Authorization = "Bearer YOUR_TOKEN" }
 ```
 
-Para no guardar el token en el archivo, sustituye el encabezado por
-`bearer_token_env_var = "INSTANTCLIPS_TOKEN"` y expórtalo como variable de entorno en tu shell.
+Para no guardar el token en el archivo de Codex, sustituye el encabezado por
+`bearer_token_env_var = "INSTANTCLIPS_TOKEN"` y expórtalo como variable de entorno en tu shell. La
+aplicación de Claude acepta el token como encabezado de solicitud en el conector (los encabezados
+de solicitud siguen en beta); los conectores de ChatGPT inician sesión mediante el flujo de inicio
+de sesión en lugar de una clave pegada. Cualquier otro cliente envía un encabezado
+`Authorization: Bearer`. El protocolo no contiene nada específico de InstantClips.
 
-### Clientes que solo admiten stdio y procesos sin interfaz
+#### Clientes que solo admiten stdio y procesos sin interfaz
 
 El paquete npm `instantclips-mcp` es un adaptador ligero de stdio a HTTPS. Sirve localmente la
 inicialización y el descubrimiento de herramientas para arrancar rápido y sin credenciales; después
@@ -91,24 +162,15 @@ El token solo se acepta mediante `INSTANTCLIPS_TOKEN`, nunca como argumento de l
 por lo que no aparece en la lista de procesos. Es obligatorio para llamar a una herramienta, pero
 no para `initialize`, `ping` ni `tools/list`. Se requiere Node.js 20 o posterior.
 
-### Cursor y VS Code
+## Instrucciones para empezar
 
-La [página de configuración](https://app.instantclips.ai/settings#ai-access) incluye botones de
-instalación de un clic. Una vez generado el token, los botones lo introducen por ti.
+Cinco para arrancar. Sustituye el enlace o el nombre del producto.
 
-### Aplicación de Claude y ChatGPT
-
-Estos clientes se conectan mediante su propia configuración de conectores, no mediante un archivo.
-Apunta el conector a `https://app.instantclips.ai/mcp` y autentícate con el mismo token: como
-encabezado de solicitud en Claude y como clave de API en ChatGPT. Los encabezados de solicitud de
-Claude siguen en beta y ChatGPT requiere el modo de desarrollador; su disponibilidad depende de tu
-cuenta y de las políticas de tu espacio de trabajo.
-
-### Cualquier otro cliente
-
-OpenClaw, Hermes o un agente que hayas creado: conéctalo a la URL mediante Streamable HTTP con un
-encabezado `Authorization: Bearer`. El protocolo no contiene nada específico de InstantClips, por
-lo que cualquier cliente compatible con MCP ya puede comunicarse con el servidor.
+1. «Haz un anuncio en vídeo para este producto: [URL]»
+2. «Importa todos los productos de esta página de colección y prepara los planes de todos. No generes nada todavía.»
+3. «Muéstrame el plan de [producto] y reescribe el gancho para que empiece por el precio.»
+4. «Haz tres vídeos de [URL] con tres ganchos distintos, para que pueda probarlos.»
+5. «¿A cuál de mis marcas pertenece este producto? Luego haz el vídeo.»
 
 ## Herramientas
 
@@ -117,11 +179,11 @@ El flujo de trabajo, en orden:
 1. **Importar** — usa `import_product_from_url` para una página de tienda o
    `create_product_from_images` cuando no haya una página que leer.
 2. **Esperar el borrador** — consulta `get_product` periódicamente hasta que terminen la importación
-   y la preparación de la dirección creativa.
-3. **Revisarlo y orientarlo** — la dirección se devuelve como texto: gancho, enfoque del contenido,
-   formato, pautas de ejecución y restricciones. `update_video_direction` permite editarla y
+   y la preparación del plan.
+3. **Revisarlo y orientarlo** — el plan se devuelve como texto: gancho, enfoque del contenido,
+   formato, pautas de ejecución y restricciones. `update_video_direction` permite editarlo y
    `redraft_video_direction` propone otro enfoque.
-4. **Renderizar** — usa `generate_video`.
+4. **Generar** — usa `generate_video`.
 5. **Recoger el resultado** — consulta `get_video` periódicamente para obtener el MP4 terminado y
    un enlace público para compartirlo.
 
@@ -138,15 +200,16 @@ quieras imprimir específicamente los esquemas actuales mediante HTTP.
 
 ## Créditos
 
-Importar un producto, preparar la dirección creativa y editarla es **gratis**. `generate_video` es
-la única herramienta que consume créditos y requiere tu autorización explícita; las herramientas
-indican antes el coste. Un agente no puede acumular cargos sin avisarte. Consulta los
+Importar un producto, preparar el plan y editarlo es **gratis**. `generate_video` es la única
+herramienta que consume créditos y requiere tu autorización explícita; las herramientas indican
+antes el coste. Un agente no puede acumular cargos sin avisarte. Consulta los
 [precios](https://instantclips.ai/#pricing).
 
 ## example.py
 
 Un cliente MCP sin dependencias: solo requiere Python 3.9 o posterior y la biblioteca estándar; no
-hace falta ejecutar `pip install`.
+hace falta ejecutar `pip install`. Se autentica con un token, porque un script no tiene navegador
+con el que iniciar sesión.
 
 ```bash
 export INSTANTCLIPS_TOKEN="your-token"
@@ -160,9 +223,10 @@ es lo que necesitas antes de automatizar el flujo de trabajo descrito arriba.
 
 ## Enlaces
 
-- [instantclips.ai/automate](https://instantclips.ai/automate/) — qué es la automatización y para
-  qué sirve. No repite la configuración; esa información está en este archivo y en la página de
-  configuración de la aplicación.
+- [instantclips.ai/automate](https://instantclips.ai/automate/) — para qué sirve la
+  automatización: un resultado real hecho a partir de una página de tienda, instrucciones para
+  empezar, las herramientas en orden y las reglas. No repite la configuración; esa información está
+  en este archivo y en la página de configuración de la aplicación.
 - [app.instantclips.ai/llms.txt](https://app.instantclips.ai/llms.txt) — descripción del producto y
   de la secuencia de herramientas en un formato legible por máquinas.
 - [Términos](https://app.instantclips.ai/terms) · [Privacidad](https://app.instantclips.ai/privacy)
