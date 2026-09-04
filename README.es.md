@@ -2,6 +2,8 @@
 
 [English](README.md) · **Español** · [简体中文](README.zh-CN.md)
 
+[![M8ven Verified](https://m8ven.ai/badge/mcp/instantclips-mcp-1k56q7?variant=verified)](https://m8ven.ai/mcp/instantclips-mcp-1k56q7)
+
 [InstantClips](https://instantclips.ai) convierte un producto de comercio electrónico en vídeos
 verticales cortos para TikTok, Instagram Reels y Stories. Funciona como un **servidor MCP alojado**,
 por lo que Claude Code, Codex, Cursor, VS Code, la aplicación de Claude, ChatGPT o cualquier otro

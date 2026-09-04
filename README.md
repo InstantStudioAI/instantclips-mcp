@@ -2,6 +2,8 @@
 
 **English** · [Español](README.es.md) · [简体中文](README.zh-CN.md)
 
+[![M8ven Verified](https://m8ven.ai/badge/mcp/instantclips-mcp-1k56q7?variant=verified)](https://m8ven.ai/mcp/instantclips-mcp-1k56q7)
+
 [InstantClips](https://instantclips.ai) turns an e-commerce product into short-form vertical
 video for TikTok, Instagram Reels and Stories. It runs a hosted **MCP server**, so Claude Code,
 Codex, Cursor, VS Code, the Claude app, ChatGPT or any other MCP client can do what the web app

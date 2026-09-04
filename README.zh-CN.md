@@ -2,6 +2,8 @@
 
 [English](README.md) · [Español](README.es.md) · **简体中文**
 
+[![M8ven Verified](https://m8ven.ai/badge/mcp/instantclips-mcp-1k56q7?variant=verified)](https://m8ven.ai/mcp/instantclips-mcp-1k56q7)
+
 [InstantClips](https://instantclips.ai) 可将电商商品转化为适用于 TikTok、Instagram Reels 和
 Stories 的竖屏短视频。它提供托管的 **MCP 服务器**，因此 Claude Code、Codex、Cursor、
 VS Code、Claude 应用、ChatGPT 或其他任何 MCP 客户端都能完成网页应用中的工作：导入商品、
