@@ -242,6 +242,20 @@ Publish the npm package first, then re-publish this same registry entry with
 `ai.instantclips` namespace; do not replace it with an `io.github.*` name. The signing key stays out
 of the repository — `.gitignore` covers `*.pem`, and a committed private key is a published one.
 
+Log in right before publishing — the registry token expires within the hour — and the domain is
+verified over HTTP, not DNS: `instantclips.ai/.well-known/mcp-registry-auth` on the marketing site
+serves this key's public half (`v=MCPv1; k=ed25519; p=…`), and there is no TXT record, so
+`login dns` fails with "no MCP public key found".
+
+```bash
+mcp-publisher login http --domain instantclips.ai \
+  --private-key "$(openssl pkey -in key.pem -text -noout | awk '/priv:/{f=1;next} /pub:/{f=0} f' | tr -d ' :\n')"
+mcp-publisher publish
+```
+
+`test/shim.test.js` pins the snapshot's server version and `server.json`'s `version`; a release
+moves both.
+
 `glama.json` is the separate, Glama-specific file that claims the listing there. A server under an
 organisation rather than a personal account can only be claimed with that file present.
 It carries ownership only. In Glama's Dockerfile form, use build steps

@@ -260,6 +260,20 @@ de nombres de marca `ai.instantclips`; no lo sustituyas por un nombre `io.github
 firma no se guarda en el repositorio: `.gitignore` cubre `*.pem`, y una clave privada incluida en un
 commit es una clave publicada.
 
+Inicia sesión justo antes de publicar — el token del registro caduca en menos de una hora — y el
+dominio se verifica por HTTP, no por DNS: `instantclips.ai/.well-known/mcp-registry-auth`, en el
+sitio de marketing, sirve la mitad pública de esta clave (`v=MCPv1; k=ed25519; p=…`); no hay
+registro TXT, así que `login dns` falla con "no MCP public key found".
+
+```bash
+mcp-publisher login http --domain instantclips.ai \
+  --private-key "$(openssl pkey -in key.pem -text -noout | awk '/priv:/{f=1;next} /pub:/{f=0} f' | tr -d ' :\n')"
+mcp-publisher publish
+```
+
+`test/shim.test.js` fija la versión del servidor de la instantánea y la `version` de `server.json`;
+cada publicación actualiza ambas.
+
 `glama.json` es el archivo independiente y específico de Glama que permite reclamar allí la ficha.
 Un servidor perteneciente a una organización, en lugar de una cuenta personal, solo puede
 reclamarse si ese archivo está presente.

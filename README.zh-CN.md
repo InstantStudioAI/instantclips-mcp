@@ -224,6 +224,18 @@ npm 软件包中的 `mcpName` 必须与该注册表名称完全一致。仓库�
 域名身份验证会保留品牌命名空间 `ai.instantclips`；请勿将其替换为 `io.github.*` 名称。签名密钥不
 存放在仓库中：`.gitignore` 已忽略 `*.pem`，因为一旦提交私钥，就等于公开了私钥。
 
+发布前再登录一次——注册表令牌不到一小时就会过期——域名验证走的是 HTTP 而非 DNS：营销站点上的
+`instantclips.ai/.well-known/mcp-registry-auth` 提供这把密钥的公钥部分（`v=MCPv1; k=ed25519; p=…`），
+没有 TXT 记录，所以 `login dns` 会报 "no MCP public key found"。
+
+```bash
+mcp-publisher login http --domain instantclips.ai \
+  --private-key "$(openssl pkey -in key.pem -text -noout | awk '/priv:/{f=1;next} /pub:/{f=0} f' | tr -d ' :\n')"
+mcp-publisher publish
+```
+
+`test/shim.test.js` 固定了快照的服务器版本和 `server.json` 的 `version`；每次发布都要同时更新这两处。
+
 `glama.json` 是 Glama 专用的独立文件，用于认领该平台上的条目。归属于组织而非个人账户的服务器，
 只有在该文件存在时才能完成认领。
 该文件只用于证明所有权。在 Glama 的 Dockerfile 表单中，将构建步骤设为

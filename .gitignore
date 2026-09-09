@@ -6,7 +6,7 @@ venv/
 .DS_Store
 node_modules/
 npm-debug.log*
-# Registry signing keys — `mcp-publisher login dns` writes key.pem here, and a
+# Registry signing keys — `mcp-publisher login http` reads key.pem from here, and a
 # committed private key is a published private key. Never relax this.
 key.pem
 *.pem
