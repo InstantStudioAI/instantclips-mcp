@@ -158,8 +158,13 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 2. **等待草稿** — 轮询 `get_product`，直到商品导入和方案起草完成。
 3. **查看并调整** — 方案以文本返回，包含开场钩子、内容重点、形式、执行指南和限制条件。
    使用 `update_video_direction` 进行编辑，或使用 `redraft_video_direction` 获取另一个方向。
-4. **生成** — 使用 `generate_video`。
+4. **生成** — 使用 `generate_video`，并传入 `expected_credit_cost`：即 `get_product` 报告并已告知用户的
+   算力费用。费用不一致时会拒绝执行，不会扣费。
 5. **获取结果** — 轮询 `get_video`，获取完成的 MP4 文件和公开分享链接。
+
+为同一商品制作另一个视频，走的是同一流程：编辑或重新起草会打开下一个视频的草稿；没有草稿时调用
+`generate_video` 会按上一方案再生成一版。已生成的视频本身无法修改。每次 `get_product` 的响应都带有
+`next_step`，说明下一步该做什么。
 
 品牌的操作方式相同：`list_brands`、`create_brand`、`set_product_brand`。每个视频都会采用对应品牌
 的表达风格进行起草。因此，当导入商品的店铺与任何现有品牌都不匹配时，流程会暂停并询问，而不是
@@ -175,7 +180,7 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 ## 算力
 
 导入商品、起草方案和编辑方案均为**免费**。只有 `generate_video` 会消耗算力，而且必须获得你的
-明确许可；工具会事先报告费用。智能体无法在你不知情的情况下产生费用。详见
+明确许可；工具会事先报告费用，`generate_video` 再以 `expected_credit_cost` 接收这一数字，费用变动时拒绝执行。智能体无法在你不知情的情况下产生费用。详见
 [价格](https://instantclips.ai/#pricing)。
 
 ## example.py

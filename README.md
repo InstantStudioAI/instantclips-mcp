@@ -172,8 +172,14 @@ The workflow, in order:
 3. **Read and steer it** — the plan comes back as text: hook, content focus, format, execution
    guidelines, restrictions. `update_video_direction` edits it, `redraft_video_direction` asks
    for another angle.
-4. **Generate** — `generate_video`.
+4. **Generate** — `generate_video`, passing `expected_credit_cost`: the cost the user was told, as
+   `get_product` reported it. A mismatch is refused without charging.
 5. **Collect** — poll `get_video` for the finished MP4 and a public share link.
+
+Another video for the same product is the same flow on that product: editing or redrafting opens the
+next video's draft, and `generate_video` with no draft renders another take of the last plan. A
+generated video itself cannot be changed. Every `get_product` response carries `next_step`: what to
+do now.
 
 Brands work the same way: `list_brands`, `create_brand`, `set_product_brand`. Every video is
 drafted in a brand's voice, so an import whose storefront matches no existing brand stops and asks
@@ -190,7 +196,8 @@ want to print the live schemas over HTTP.
 
 Importing a product, drafting the plan and editing it are all **free**. `generate_video` is the
 only tool that spends credits, and it requires your explicit go-ahead — the tools report the cost
-first. An agent cannot quietly run up a bill. See [pricing](https://instantclips.ai/#pricing).
+first, and `generate_video` takes that number back as `expected_credit_cost`, refusing a launch whose
+cost has changed. An agent cannot quietly run up a bill. See [pricing](https://instantclips.ai/#pricing).
 
 ## example.py
 
