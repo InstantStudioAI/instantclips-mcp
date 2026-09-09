@@ -139,6 +139,12 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 令牌只能通过 `INSTANTCLIPS_TOKEN` 提供，不能作为命令行参数传入，因此不会出现在进程列表中。
 工具调用需要令牌，但 `initialize`、`ping` 和 `tools/list` 不需要。需要 Node.js 20 或更高版本。
 
+本机上的照片：适配器可以自行上传，因此可以用从未离开你笔记本电脑的文件制作视频。通过适配器，
+`create_product_from_images` 可用 `image_paths`（文件路径，最多 9 个，每个不超过 8 MB）代替
+`image_urls`，`update_product` 可用 `add_image_paths`。文件会被打包并直接发送到 InstantClips 作为商品照片，
+不会从任何地方下载。把文件拖进会把路径交给助手的客户端（Claude Code、Cursor、VS Code、终端智能体），
+然后说出你想要的视频即可。
+
 ## 入门提示语
 
 先从这五句开始，替换成你的链接或商品名即可。

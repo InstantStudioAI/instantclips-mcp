@@ -162,6 +162,14 @@ El token solo se acepta mediante `INSTANTCLIPS_TOKEN`, nunca como argumento de l
 por lo que no aparece en la lista de procesos. Es obligatorio para llamar a una herramienta, pero
 no para `initialize`, `ping` ni `tools/list`. Se requiere Node.js 20 o posterior.
 
+Fotos en este equipo: el adaptador puede subirlas por sí mismo, así que se puede hacer un vídeo
+con archivos que nunca salieron de tu portátil. A través del adaptador, `create_product_from_images`
+acepta `image_paths` (rutas a los archivos, hasta 9, de 8 MB cada uno) en lugar de `image_urls`, y
+`update_product` acepta `add_image_paths`. Los archivos se empaquetan y se envían directamente a
+InstantClips como fotos del producto; no se descarga nada de ningún sitio. Arrastra los archivos a
+un cliente que le pase sus rutas al asistente (Claude Code, Cursor, VS Code, agentes de terminal) y
+di qué quieres crear.
+
 ## Instrucciones para empezar
 
 Cinco para arrancar. Sustituye el enlace o el nombre del producto.

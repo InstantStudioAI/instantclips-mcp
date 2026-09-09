@@ -7,10 +7,10 @@
   "serverInfo": {
     "name": "instantclips",
     "title": "InstantClips",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "websiteUrl": "https://instantclips.ai"
   },
-  "instructions": "InstantClips turns a product into a short vertical marketing video.\n\nEvery video is drafted against a BRAND — a voice, a target market and a\nset of keywords. Getting the brand right matters more than anything else\nhere: a product drafted under the wrong company's voice renders perfectly\nand is still unusable. Never assume a product belongs to whatever brand\nthe account already has.\n\nStart by asking the user for their store's URL if you do not already know\nthe brand, and call `list_brands` to see what the account has. Unlike the\nwebsite, which takes a product link and gets out of the way, you can\nsimply ask — a short question here is cheaper than a wrongly branded\nvideo.\n\nThe workflow, in order:\n\n1. `import_product_from_url` with the product's page URL (or\n   `create_product_from_images` with hosted image URLs). Both return\n   immediately and import in the background.\n2. Poll `get_product` until `import_status` is \"imported\".\n   - If it reports `brand_decision_required` with `drafting: false`, the\n     brand could not be settled: the storefront does not match any brand\n     on the account, or (photos) there was no page to detect one from.\n     Stop and put the choice to the user: create a brand for it\n     (`create_brand`) or attach it to one they already have\n     (`set_product_brand`). Do not choose for them. For a photos product\n     nothing was detected, so `create_brand` needs the name from the\n     user, and the voice, target market and keywords they can give you.\n     No direction is drafted until this is settled.\n   - Otherwise the import also drafts a video direction — a six-section\n     creative plan (Hook / Content Focus / Format / Suggesting Visual\n     Aesthetic / Execution Guidelines /\n     Strict Guidelines & Restrictions) — so keep polling until\n     `video_direction.drafting` is false.\n3. Show the drafted direction to the user. Edit it with\n   `update_video_direction`, or roll a completely different angle with\n   `redraft_video_direction`. The direction is optional: an empty one is\n   valid and generation still works.\n4. `generate_video`, passing `expected_credit_cost` — this SPENDS THE\n   USER'S CREDITS. Get the user's explicit go-ahead first, and tell\n   them the credit cost that `get_product` reports; the launch is\n   refused, uncharged, if that number no longer matches.\n5. Poll `get_video` until status is \"done\", then give the user\n   `output_url` (the finished MP4) and `share_url` (a public page).\n   On a free account the MP4 carries the InstantClips watermark\n   (`watermarked` is true); buying credits removes it from every video\n   on the account.\n\nEvery get_product response carries `next_step`: what to do now and the\ntool to do it with. Read it before choosing a tool — it covers the\nstates this list does not: a failed import, a failed or stalled\ndirection draft, photos the video model will not take, a failed\nrender, a balance short of the cost.\n\nA product whose video has been generated is not finished with, but a\ngenerated video cannot be changed: its direction locks the moment\ngeneration starts, and re-importing the same URL returns the same\nproduct rather than a fresh one. Editing or redrafting such a product\nopens its next video's draft, seeded from the last one (the response\nsays `opened_new_video: true`), and `generate_video` with no draft\nrenders another take of the last plan as a new video. Continue from\nstep 3 either way.\n\nA render takes a few minutes. Poll every 20-30 seconds rather than in a\ntight loop, and tell the user what you are waiting on.\n",
+  "instructions": "InstantClips turns a product into a short vertical marketing video.\n\nEvery video is drafted against a BRAND — a voice, a target market and a\nset of keywords. Getting the brand right matters more than anything else\nhere: a product drafted under the wrong company's voice renders perfectly\nand is still unusable. Never assume a product belongs to whatever brand\nthe account already has.\n\nStart by asking the user for their store's URL if you do not already know\nthe brand, and call `list_brands` to see what the account has. Unlike the\nwebsite, which takes a product link and gets out of the way, you can\nsimply ask — a short question here is cheaper than a wrongly branded\nvideo.\n\nThe workflow, in order:\n\n1. `import_product_from_url` with the product's page URL (or\n   `create_product_from_images` with hosted image URLs). Both return\n   immediately and import in the background. If the user already made\n   the product on the website — dropped photos on the workbench, pasted\n   a link there — find it with `list_products` (newest first) and\n   continue from step 2.\n2. Poll `get_product` until `import_status` is \"imported\".\n   - If it reports `brand_decision_required` with `drafting: false`, the\n     brand could not be settled: the storefront does not match any brand\n     on the account, or (photos) there was no page to detect one from.\n     Stop and put the choice to the user: create a brand for it\n     (`create_brand`) or attach it to one they already have\n     (`set_product_brand`). Do not choose for them. For a photos product\n     nothing was detected, so `create_brand` needs the name from the\n     user, and the voice, target market and keywords they can give you.\n     No direction is drafted until this is settled.\n   - Otherwise the import also drafts a video direction — a six-section\n     creative plan (Hook / Content Focus / Format / Suggesting Visual\n     Aesthetic / Execution Guidelines /\n     Strict Guidelines & Restrictions) — so keep polling until\n     `video_direction.drafting` is false.\n3. Show the drafted direction to the user. Edit it with\n   `update_video_direction`, or roll a completely different angle with\n   `redraft_video_direction`. The direction is optional: an empty one is\n   valid and generation still works. The render settings — ratio,\n   resolution, duration_seconds, enable_audio — are parameters of\n   `update_video_direction` too, and are never read from the direction\n   text. So are the photos: `images` in `get_product` lists every one\n   with `usable` and `selected`, and `selected_image_ids` chooses which\n   the render uses. `format` and `format_options` name the angle a\n   redraft can pin. `update_product` corrects the facts a draft is\n   written from (name, description, price, the posted link, the photos)\n   and `update_brand` the identity (voice, market, keywords); both feed\n   the next draft, so redraft after.\n4. `generate_video`, passing `expected_credit_cost` — this SPENDS THE\n   USER'S CREDITS. Get the user's explicit go-ahead first, and tell\n   them the credit cost that `get_product` reports; the launch is\n   refused, uncharged, if that number no longer matches.\n5. Poll `get_video` until status is \"done\", then give the user\n   `output_url` (the finished MP4) and `share_url` (a public page).\n   On a free account the MP4 carries the InstantClips watermark\n   (`watermarked` is true); buying credits removes it from every video\n   on the account.\n\nEvery get_product response carries `next_step`: what to do now and the\ntool to do it with. Read it before choosing a tool — it covers the\nstates this list does not: a failed import, a failed or stalled\ndirection draft, photos the video model will not take, a failed\nrender, a balance short of the cost.\n\nA product whose video has been generated is not finished with, but a\ngenerated video cannot be changed: its direction locks the moment\ngeneration starts, and re-importing the same URL returns the same\nproduct rather than a fresh one. Editing or redrafting such a product\nopens its next video's draft, seeded from the last one (the response\nsays `opened_new_video: true`), and `generate_video` with no draft\nrenders another take of the last plan as a new video. Continue from\nstep 3 either way.\n\nA render takes a few minutes. Poll every 20-30 seconds rather than in a\ntight loop, and tell the user what you are waiting on.\n",
   "tools": [
     {
       "name": "list_brands",
@@ -19,6 +19,38 @@
       "inputSchema": {
         "type": "object",
         "properties": {},
+        "required": [],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_products",
+      "title": "List the account's products",
+      "description": "List the account's products, newest first — the ones imported here, on\nthe website, or from photos dropped on the workbench. Use it to find a\nproduct_id you do not have: a product the user made on the website, or\none from an earlier conversation. Then `get_product` for its full state.\n\n`query` matches the name or the source URL, `brand_id` narrows to one\nbrand (see `list_brands`), and `limit` caps the list (default 20, at\nmost 50). A product still waiting on its brand decision shows\n`brand_decision_required: true` and no brand.\n\nThis does not spend credits.\n",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Matches the product's name or source URL, case-insensitively."
+          },
+          "brand_id": {
+            "type": "string",
+            "description": "Only this brand's products."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "description": "How many, newest first. Default 20."
+          }
+        },
         "required": [],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -105,7 +137,7 @@
     {
       "name": "get_product",
       "title": "Get a product and its video direction",
-      "description": "Read a product: what the import found, the current video direction and\nsettings, and every video generated from it.\n\nUse this to poll after `import_product_from_url` or\n`create_product_from_images`. The product is ready to work with when\n`import_status` is \"imported\", there is no `brand_decision_required`,\nAND `video_direction.drafting` is false. If a brand decision is present\nwith `drafting: false`, ask the user to choose a brand and resolve it\nwith `create_brand` or `set_product_brand` before waiting for a direction.\nPoll every 20-30 seconds while import or drafting is in progress.\n\n`import_status` values: \"pending\" and \"importing\" mean keep polling;\n\"imported\" means done; \"failed\" means it did not work and\n`import_failed_reason` says why.\n\n`video_direction.credit_cost` is what `generate_video` will charge for\nthe current settings.\n\nOnce generation has started the direction is locked and\n`video_direction.editable` is false. Editing or redrafting then opens\nthe next video's draft, and `next_step` says so.\n",
+      "description": "Read a product: what the import found, the current video direction and\nsettings, and every video generated from it.\n\nUse this to poll after `import_product_from_url` or\n`create_product_from_images`. The product is ready to work with when\n`import_status` is \"imported\", there is no `brand_decision_required`,\nAND `video_direction.drafting` is false. If a brand decision is present\nwith `drafting: false`, ask the user to choose a brand and resolve it\nwith `create_brand` or `set_product_brand` before waiting for a direction.\nPoll every 20-30 seconds while import or drafting is in progress.\n\n`import_status` values: \"pending\" and \"importing\" mean keep polling;\n\"imported\" means done; \"failed\" means it did not work and\n`import_failed_reason` says why.\n\n`video_direction.credit_cost` is what `generate_video` will charge for\nthe current settings. `duration_seconds`, `ratio`, `resolution` and\n`enable_audio` are those settings; change them with\n`update_video_direction`, not in the direction text.\n\nOnce generation has started the direction is locked and\n`video_direction.editable` is false. Editing or redrafting then opens\nthe next video's draft, and `next_step` says so.\n",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -203,9 +235,106 @@
       }
     },
     {
+      "name": "update_brand",
+      "title": "Edit a brand's identity",
+      "description": "Edit a brand: `name`, `voice` (how it sounds — a few sentences),\n`target_market` (where it sells, e.g. \"US/North America\"; it drives the\nspoken language) and `keywords` (the themes drafts lean on; the list you\npass replaces the old one). This is the identity every video for the\nbrand's products is drafted against. Drafts already written keep their\ntext — `redraft_video_direction` on a product to use the new identity.\n\nOnly the fields you pass change. `list_brands` has the ids and the\ncurrent values. This does not spend credits.\n",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brand_id": {
+            "type": "string",
+            "description": "The brand's id, from list_brands."
+          },
+          "name": {
+            "type": "string",
+            "description": "The brand's name."
+          },
+          "voice": {
+            "type": "string",
+            "description": "How the brand sounds, in a few sentences."
+          },
+          "target_market": {
+            "type": "string",
+            "description": "Free text, e.g. \"US/North America\" or \"Japan\"."
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The themes drafts lean on. Replaces the whole list."
+          }
+        },
+        "required": [
+          "brand_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "update_product",
+      "title": "Edit a product's facts, link and photos",
+      "description": "Edit what a product says about itself. `name`, `description` and\n`price` are the facts the direction draft is written from — fix a\nscrape that got them wrong, then `redraft_video_direction` so the next\ndraft uses them (the response's `next_step` says so when a direction\nalready exists). `link_url` is the product link posted with the video\nand shown on its share page: http(s) only, or empty to clear it.\n\n`add_image_urls` downloads hosted photos and adds them to the product,\nup to 9 per call and 8 MB each; the usable ones join the\nrender's selection while there is room, as the workbench's \"+\" tile\ndoes. `remove_image_ids` deletes photos by the image_id `get_product`\nlists; a removed photo leaves the selection by itself. Only the fields\nyou pass change.\n\nThis does not spend credits.\n",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "The product's id."
+          },
+          "name": {
+            "type": "string",
+            "description": "The product's name."
+          },
+          "description": {
+            "type": "string",
+            "description": "What the product is; the draft reads it. Empty clears it."
+          },
+          "price": {
+            "type": "string",
+            "description": "Free text as the store shows it, e.g. \"$29\" or \"¥3,980\". Empty clears it."
+          },
+          "link_url": {
+            "type": "string",
+            "description": "The product link posted with the video. http(s) only; empty clears it."
+          },
+          "add_image_urls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Hosted image URLs to download and add, in the order they should appear."
+          },
+          "remove_image_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "image_id values from get_product's images to delete."
+          }
+        },
+        "required": [
+          "product_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
       "name": "update_video_direction",
       "title": "Edit the video direction and render settings",
-      "description": "Edit the creative direction and render settings for a product's next\nvideo. Only the fields you pass are changed; everything else keeps its\ncurrent value. Supplied text replaces the saved text; an empty creative\ndirection clears it. A target_market change updates the shared brand\nand affects future videos for its other products.\n\n`creative_direction` is the plan the render is built from. It is free\ntext, but the drafts follow a six-section shape that works well and is\nworth preserving when editing:\n\n  Hook: ...\n  Content Focus: ...\n  Format: ...\n  Suggesting Visual Aesthetic: ...\n  Execution Guidelines: ...\n  Strict Guidelines & Restrictions: ...\n\nDo not invent a direction from nothing when one has not been drafted\nyet — call `redraft_video_direction` and edit what comes back. Leaving\nit empty is also valid: generation works without a direction.\n\n`creator_note` is different and smaller: the user's own short note to\nthe director (\"mention it is machine washable\", \"for Father's Day\"). It\nis carried through to the render verbatim, so put the user's words in\nit, not your paraphrase.\n\nA target_market change after a direction exists gets a `next_step` in\nthe response: the direction's wording sets the spoken language, so it\nneeds a redraft (or an edit) to match the new market.\n\nA launched video cannot change: if the product's last video has\nalready launched, this opens the next video's draft (seeded from that\nvideo) and edits that; the response says `opened_new_video: true` and\ncarries the new video_request_id.\n\nThis does not spend credits.\n",
+      "description": "Edit the creative direction and render settings for a product's next\nvideo. Only the fields you pass are changed; everything else keeps its\ncurrent value. Supplied text replaces the saved text; an empty creative\ndirection clears it. A target_market change updates the shared brand\nand affects future videos for its other products.\n\n`creative_direction` is the plan the render is built from. It is free\ntext, but the drafts follow a six-section shape that works well and is\nworth preserving when editing:\n\n  Hook: ...\n  Content Focus: ...\n  Format: ...\n  Suggesting Visual Aesthetic: ...\n  Execution Guidelines: ...\n  Strict Guidelines & Restrictions: ...\n\nDo not invent a direction from nothing when one has not been drafted\nyet — call `redraft_video_direction` and edit what comes back. Leaving\nit empty is also valid: generation works without a direction.\n\n`creator_note` is different and smaller: the user's own short note to\nthe director (\"mention it is machine washable\", \"for Father's Day\"). It\nis carried through to the render verbatim, so put the user's words in\nit, not your paraphrase.\n\n`selected_image_ids` chooses which of the product's photos the render\nuses, in order, by the image_id `get_product` lists under `images`\n(usable ones only, at most 9); an empty list restores the\ndefault, the first usable ones. The poll's `selected_image_ids` shows\nwhat would go out now.\n\n`duration_seconds` is the render length — 15, 20, 25 or 30 — and a\nsetting, not part of the direction: writing \"20 seconds\" into the text\nchanges nothing. Longer costs more; the response's `credit_cost` is\nthe new price, and the user must hear it before `generate_video`.\nAbove the plan's ceiling it clamps like resolution (free: 20s).\n\nA target_market change after a direction exists gets a `next_step` in\nthe response: the direction's wording sets the spoken language, so it\nneeds a redraft (or an edit) to match the new market.\n\nA launched video cannot change: if the product's last video has\nalready launched, this opens the next video's draft (seeded from that\nvideo) and edits that; the response says `opened_new_video: true` and\ncarries the new video_request_id.\n\nThis does not spend credits.\n",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -239,6 +368,23 @@
               "1080P"
             ],
             "description": "1080P is available to credit-pack purchasers and eligible tiers; a pick above the account's ceiling becomes that ceiling (the response reports what was actually saved)."
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "enum": [
+              15,
+              20,
+              25,
+              30
+            ],
+            "description": "Render length in seconds. Priced per second, so the response's credit_cost changes with it; a pick above the plan's ceiling becomes that ceiling (free accounts: 20). The direction text never sets the length — this does."
+          },
+          "selected_image_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The photos the render uses, in order, by image_id from get_product's images; usable ones only, at most 9. An empty list restores the default (the first usable ones)."
           },
           "enable_audio": {
             "type": "boolean",
@@ -274,7 +420,7 @@
           },
           "format": {
             "type": "string",
-            "description": "Optional. Pin a specific video format instead of letting the drafter pick one — e.g. \"asmr\", \"hands_demo\", \"pov\". Unknown values are ignored, so leave it out unless the user asked for a particular kind of video."
+            "description": "Optional. Pin the angle instead of letting the drafter pick one: a key from video_direction.format_options in get_product (this product's shortlist, or the whole catalogue, each with a one-line summary). Unknown keys are ignored, so leave it out unless the user asked for a particular kind of video."
           }
         },
         "required": [

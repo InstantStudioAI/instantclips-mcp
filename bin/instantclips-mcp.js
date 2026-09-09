@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { basename, extname } from "node:path";
 
 import {
   Client,
@@ -129,6 +131,154 @@ function writeDiagnostic(failure) {
   process.stderr.write(`instantclips-mcp: ${failure.message}\n`);
 }
 
+// ---- Photos on this machine ------------------------------------------------
+//
+// The hosted server cannot read the caller's disk; this adapter runs on it and
+// can. So two parameters exist only here: `image_paths` on
+// create_product_from_images and `add_image_paths` on update_product. They
+// are added to the advertised schemas at serve time and handled before any
+// proxying, which keeps the bundled manifest exactly what the hosted server
+// serves. The files are read and posted as multipart to the hosted upload
+// endpoints under the same bearer — packaged and uploaded, never downloaded
+// from anywhere.
+const MAX_LOCAL_IMAGES = 9;
+const MAX_LOCAL_IMAGE_BYTES = 8 * 1024 * 1024;
+const LOCAL_IMAGE_TYPES = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".bmp": "image/bmp",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+  ".heic": "image/heic",
+  ".heif": "image/heif",
+};
+const LOCAL_UPLOAD_PARAMETERS = {
+  create_product_from_images: {
+    name: "image_paths",
+    replaces: "image_urls",
+    description:
+      `Paths to photos on this machine, up to ${MAX_LOCAL_IMAGES}, ${MAX_LOCAL_IMAGE_BYTES / 1024 / 1024} MB each. ` +
+      "This adapter uploads the files itself; use it instead of image_urls for local photos.",
+    note:
+      "Through this adapter, `image_paths` (files on this machine) can replace `image_urls`; the files are uploaded directly.",
+  },
+  update_product: {
+    name: "add_image_paths",
+    description:
+      `Paths to photos on this machine to add, up to ${MAX_LOCAL_IMAGES}, ${MAX_LOCAL_IMAGE_BYTES / 1024 / 1024} MB each. ` +
+      "This adapter uploads the files itself. Send it with product_id alone; other fields go in a separate call.",
+    note:
+      "Through this adapter, `add_image_paths` (files on this machine) adds photos; the files are uploaded directly.",
+  },
+};
+
+function withLocalUploads(tools) {
+  return tools.map((tool) => {
+    const extra = LOCAL_UPLOAD_PARAMETERS[tool.name];
+    if (!extra) return tool;
+    const schema = tool.inputSchema || { type: "object", properties: {} };
+    const properties = {
+      ...schema.properties,
+      [extra.name]: { type: "array", items: { type: "string" }, description: extra.description },
+    };
+    const inputSchema = { ...schema, properties };
+    if (extra.replaces && Array.isArray(schema.required)) {
+      inputSchema.required = schema.required.filter((key) => key !== extra.replaces);
+    }
+    return { ...tool, description: `${tool.description}\n\n${extra.note}`, inputSchema };
+  });
+}
+
+function hasPaths(value) {
+  return Array.isArray(value) && value.length > 0;
+}
+
+// A CliError, so safeFailure relays the message verbatim. Built at call
+// time: CliError is declared further down and class declarations do not hoist.
+function uploadError(message) {
+  return new CliError("upload_failed", message, 1);
+}
+
+async function appendLocalImages(form, paths) {
+  const list = paths.map((path) => String(path).trim()).filter(Boolean);
+  if (list.length === 0) throw uploadError("No image paths were given.");
+  if (list.length > MAX_LOCAL_IMAGES) {
+    throw uploadError(`At most ${MAX_LOCAL_IMAGES} images per call.`);
+  }
+  for (const path of list) {
+    const type = LOCAL_IMAGE_TYPES[extname(path).toLowerCase()];
+    if (!type) {
+      throw uploadError(`${path} is not an image type the video model takes (jpg, png, webp, gif, bmp, tiff, heic).`);
+    }
+    let bytes;
+    try {
+      bytes = await readFile(path);
+    } catch (error) {
+      throw uploadError(`${path}: ${error.code === "ENOENT" ? "no such file" : error.message}.`);
+    }
+    if (bytes.byteLength > MAX_LOCAL_IMAGE_BYTES) {
+      throw uploadError(`${path} is larger than ${MAX_LOCAL_IMAGE_BYTES / 1024 / 1024} MB.`);
+    }
+    form.append("images[]", new Blob([bytes], { type }), basename(path));
+  }
+}
+
+function uploadsUrl(endpoint, suffix) {
+  const base = endpoint.pathname.replace(/\/$/, "");
+  return new URL(`${base}/${suffix}`, endpoint);
+}
+
+async function uploadForm(config, suffix, form) {
+  if (!config.token) {
+    throw new CliError(
+      "missing_token",
+      `INSTANTCLIPS_TOKEN is required for tool calls. Create a token at ${SETTINGS_URL}.`,
+      78,
+    );
+  }
+  const response = await fetch(uploadsUrl(config.endpoint, suffix), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${config.token}` },
+    body: form,
+  });
+  const text = await response.text();
+  if (response.status === 401) {
+    const error = new Error(`401 ${text}`);
+    error.data = { status: 401 };
+    throw error;
+  }
+  return { content: [{ type: "text", text }], isError: !response.ok };
+}
+
+// → a tool result when the call is one this adapter answers itself, else null.
+async function callLocally(config, params) {
+  const args = params.arguments ?? {};
+  if (params.name === "create_product_from_images" && hasPaths(args.image_paths)) {
+    const form = new FormData();
+    for (const key of ["name", "description", "creator_note", "brand_id"]) {
+      if (args[key] !== undefined && args[key] !== null && args[key] !== "") form.append(key, String(args[key]));
+    }
+    await appendLocalImages(form, args.image_paths);
+    return uploadForm(config, "products", form);
+  }
+  if (params.name === "update_product" && hasPaths(args.add_image_paths)) {
+    const others = Object.keys(args).filter((key) => !["product_id", "add_image_paths"].includes(key));
+    if (!args.product_id) throw uploadError("product_id is required with add_image_paths.");
+    if (others.length > 0) {
+      throw uploadError(
+        `Send add_image_paths with product_id alone; ${others.join(", ")} go in a separate update_product call.`,
+      );
+    }
+    const form = new FormData();
+    await appendLocalImages(form, args.add_image_paths);
+    return uploadForm(config, `products/${encodeURIComponent(String(args.product_id))}/images`, form);
+  }
+  return null;
+}
+
 async function startBridge(config) {
   const stdio = new StdioServerTransport();
   const server = new Server(manifest.serverInfo, {
@@ -161,11 +311,13 @@ async function startBridge(config) {
   };
 
   server.setRequestHandler("tools/list", async () => ({
-    tools: manifest.tools,
+    tools: withLocalUploads(manifest.tools),
   }));
 
   server.setRequestHandler("tools/call", async (request) => {
     try {
+      const local = await callLocally(config, request.params);
+      if (local) return local;
       const client = await connectRemote();
       return await client.callTool(request.params);
     } catch (error) {
