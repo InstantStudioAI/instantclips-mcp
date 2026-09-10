@@ -278,7 +278,18 @@ async function uploadForm(config, suffix, form) {
     error.data = { status: 401 };
     throw error;
   }
-  return { content: [{ type: "text", text }], isError: !response.ok };
+  if (!response.ok) return { content: [{ type: "text", text }], isError: true };
+  // The hosted tools declare output schemas, and a validating client refuses
+  // a result that has one but no structuredContent — so the upload's payload
+  // (the same product object get_product returns) travels both ways.
+  const result = { content: [{ type: "text", text }], isError: false };
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) result.structuredContent = parsed;
+  } catch {
+    // Not JSON: the text block stands alone, as it always did.
+  }
+  return result;
 }
 
 // → a tool result when the call is one this adapter answers itself, else null.

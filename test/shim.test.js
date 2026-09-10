@@ -511,6 +511,8 @@ test("uploads photos from this machine as multipart, never as URLs", async (t) =
   const created = await nextMessage();
   assert.equal(created.result.isError, false);
   assert.equal(JSON.parse(created.result.content[0].text).product_id, "p-1");
+  // The tool advertises an output schema, so the payload rides as structuredContent too.
+  assert.deepEqual(created.result.structuredContent, JSON.parse(created.result.content[0].text));
   const upload = mock.requests.find((request) => request.upload);
   assert.equal(upload.url, "/mcp/products");
   assert.equal(upload.headers.authorization, "Bearer test-token");
@@ -530,6 +532,7 @@ test("uploads photos from this machine as multipart, never as URLs", async (t) =
   );
   const added = await nextMessage();
   assert.equal(added.result.isError, false);
+  assert.equal(added.result.structuredContent.product_id, "p-1");
   assert.equal(mock.requests.filter((request) => request.upload).at(-1).url, "/mcp/products/p-1/images");
   run.child.stdin.end();
   assert.deepEqual(await run.exited, { code: 0, signal: null });

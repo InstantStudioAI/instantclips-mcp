@@ -22,6 +22,76 @@
         "required": [],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "brands": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "brand_id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "target_market": {
+                  "type": "string"
+                },
+                "voice": {
+                  "type": "string"
+                },
+                "keywords": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "configured": {
+                  "type": "boolean"
+                },
+                "is_default": {
+                  "type": "boolean"
+                },
+                "product_count": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "brand_id",
+                "name",
+                "keywords",
+                "configured",
+                "is_default",
+                "product_count"
+              ]
+            }
+          },
+          "brands_used": {
+            "type": "integer"
+          },
+          "brand_limit": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "unlimited_brands": {
+            "type": "boolean"
+          },
+          "can_create_brand": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "brands",
+          "brands_used",
+          "unlimited_brands",
+          "can_create_brand"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -54,6 +124,94 @@
         "required": [],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "import_status": {
+                  "type": "string"
+                },
+                "source_url": {
+                  "type": "string"
+                },
+                "image_count": {
+                  "type": "integer"
+                },
+                "brand": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": []
+                },
+                "brand_decision_required": {
+                  "type": "boolean"
+                },
+                "video_count": {
+                  "type": "integer"
+                },
+                "latest_video_status": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "workbench_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "product_id",
+                "state",
+                "image_count",
+                "video_count",
+                "created_at",
+                "workbench_url"
+              ]
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "products",
+          "count",
+          "total",
+          "next_step"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -79,6 +237,309 @@
         },
         "required": [
           "url"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "import_status": {
+            "type": "string"
+          },
+          "import_failed_reason": {
+            "type": "string"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "usable_image_count": {
+            "type": "integer"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "usable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "image_id",
+                "url",
+                "filename",
+                "usable",
+                "selected"
+              ]
+            }
+          },
+          "state": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          },
+          "brand_decision_required": {
+            "type": "object",
+            "properties": {
+              "drafting": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "detected_brand_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "existing_brands": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_market": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "keywords": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "brand_id",
+                    "name",
+                    "keywords"
+                  ]
+                }
+              },
+              "can_create_brand": {
+                "type": "boolean"
+              },
+              "brand_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "brands_used": {
+                "type": "integer"
+              },
+              "resolve_with": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "drafting"
+            ]
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "video_direction": {
+            "type": "object",
+            "properties": {
+              "video_request_id": {
+                "type": "string"
+              },
+              "drafting": {
+                "type": "boolean"
+              },
+              "creative_direction": {
+                "type": "string"
+              },
+              "draft_failed": {
+                "type": "boolean"
+              },
+              "draft_error": {
+                "type": "string"
+              },
+              "creator_note": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "format_options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "summary"
+                  ]
+                }
+              },
+              "selected_image_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ratio": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "enable_audio": {
+                "type": "boolean"
+              },
+              "target_market": {
+                "type": "string"
+              },
+              "credit_cost": {
+                "type": "number"
+              },
+              "affordable": {
+                "type": "boolean"
+              },
+              "editable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "video_request_id",
+              "drafting",
+              "draft_failed",
+              "format_options",
+              "selected_image_ids",
+              "credit_cost",
+              "editable"
+            ]
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "already_imported": {
+            "type": "boolean"
+          },
+          "retried": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "product_id",
+          "image_count",
+          "usable_image_count",
+          "images",
+          "state",
+          "workbench_url",
+          "videos"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -152,6 +613,303 @@
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "import_status": {
+            "type": "string"
+          },
+          "import_failed_reason": {
+            "type": "string"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "usable_image_count": {
+            "type": "integer"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "usable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "image_id",
+                "url",
+                "filename",
+                "usable",
+                "selected"
+              ]
+            }
+          },
+          "state": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          },
+          "brand_decision_required": {
+            "type": "object",
+            "properties": {
+              "drafting": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "detected_brand_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "existing_brands": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_market": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "keywords": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "brand_id",
+                    "name",
+                    "keywords"
+                  ]
+                }
+              },
+              "can_create_brand": {
+                "type": "boolean"
+              },
+              "brand_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "brands_used": {
+                "type": "integer"
+              },
+              "resolve_with": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "drafting"
+            ]
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "video_direction": {
+            "type": "object",
+            "properties": {
+              "video_request_id": {
+                "type": "string"
+              },
+              "drafting": {
+                "type": "boolean"
+              },
+              "creative_direction": {
+                "type": "string"
+              },
+              "draft_failed": {
+                "type": "boolean"
+              },
+              "draft_error": {
+                "type": "string"
+              },
+              "creator_note": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "format_options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "summary"
+                  ]
+                }
+              },
+              "selected_image_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ratio": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "enable_audio": {
+                "type": "boolean"
+              },
+              "target_market": {
+                "type": "string"
+              },
+              "credit_cost": {
+                "type": "number"
+              },
+              "affordable": {
+                "type": "boolean"
+              },
+              "editable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "video_request_id",
+              "drafting",
+              "draft_failed",
+              "format_options",
+              "selected_image_ids",
+              "credit_cost",
+              "editable"
+            ]
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "image_count",
+          "usable_image_count",
+          "images",
+          "state",
+          "workbench_url",
+          "videos"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -178,6 +936,307 @@
         },
         "required": [
           "product_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "import_status": {
+            "type": "string"
+          },
+          "import_failed_reason": {
+            "type": "string"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "usable_image_count": {
+            "type": "integer"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "usable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "image_id",
+                "url",
+                "filename",
+                "usable",
+                "selected"
+              ]
+            }
+          },
+          "state": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          },
+          "brand_decision_required": {
+            "type": "object",
+            "properties": {
+              "drafting": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "detected_brand_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "existing_brands": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_market": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "keywords": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "brand_id",
+                    "name",
+                    "keywords"
+                  ]
+                }
+              },
+              "can_create_brand": {
+                "type": "boolean"
+              },
+              "brand_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "brands_used": {
+                "type": "integer"
+              },
+              "resolve_with": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "drafting"
+            ]
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "video_direction": {
+            "type": "object",
+            "properties": {
+              "video_request_id": {
+                "type": "string"
+              },
+              "drafting": {
+                "type": "boolean"
+              },
+              "creative_direction": {
+                "type": "string"
+              },
+              "draft_failed": {
+                "type": "boolean"
+              },
+              "draft_error": {
+                "type": "string"
+              },
+              "creator_note": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "format_options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "summary"
+                  ]
+                }
+              },
+              "selected_image_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ratio": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "enable_audio": {
+                "type": "boolean"
+              },
+              "target_market": {
+                "type": "string"
+              },
+              "credit_cost": {
+                "type": "number"
+              },
+              "affordable": {
+                "type": "boolean"
+              },
+              "editable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "video_request_id",
+              "drafting",
+              "draft_failed",
+              "format_options",
+              "selected_image_ids",
+              "credit_cost",
+              "editable"
+            ]
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "credits_remaining": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "image_count",
+          "usable_image_count",
+          "images",
+          "state",
+          "workbench_url",
+          "videos",
+          "credits_remaining"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -224,6 +1283,332 @@
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "import_status": {
+            "type": "string"
+          },
+          "import_failed_reason": {
+            "type": "string"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "usable_image_count": {
+            "type": "integer"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "usable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "image_id",
+                "url",
+                "filename",
+                "usable",
+                "selected"
+              ]
+            }
+          },
+          "state": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          },
+          "brand_decision_required": {
+            "type": "object",
+            "properties": {
+              "drafting": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "detected_brand_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "existing_brands": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_market": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "keywords": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "brand_id",
+                    "name",
+                    "keywords"
+                  ]
+                }
+              },
+              "can_create_brand": {
+                "type": "boolean"
+              },
+              "brand_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "brands_used": {
+                "type": "integer"
+              },
+              "resolve_with": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "drafting"
+            ]
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "video_direction": {
+            "type": "object",
+            "properties": {
+              "video_request_id": {
+                "type": "string"
+              },
+              "drafting": {
+                "type": "boolean"
+              },
+              "creative_direction": {
+                "type": "string"
+              },
+              "draft_failed": {
+                "type": "boolean"
+              },
+              "draft_error": {
+                "type": "string"
+              },
+              "creator_note": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "format_options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "summary"
+                  ]
+                }
+              },
+              "selected_image_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ratio": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "enable_audio": {
+                "type": "boolean"
+              },
+              "target_market": {
+                "type": "string"
+              },
+              "credit_cost": {
+                "type": "number"
+              },
+              "affordable": {
+                "type": "boolean"
+              },
+              "editable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "video_request_id",
+              "drafting",
+              "draft_failed",
+              "format_options",
+              "selected_image_ids",
+              "credit_cost",
+              "editable"
+            ]
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "created_brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          }
+        },
+        "required": [
+          "product_id",
+          "image_count",
+          "usable_image_count",
+          "images",
+          "state",
+          "workbench_url",
+          "videos",
+          "created_brand"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -254,6 +1639,331 @@
         "required": [
           "product_id",
           "brand_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "import_status": {
+            "type": "string"
+          },
+          "import_failed_reason": {
+            "type": "string"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "usable_image_count": {
+            "type": "integer"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "usable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "image_id",
+                "url",
+                "filename",
+                "usable",
+                "selected"
+              ]
+            }
+          },
+          "state": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          },
+          "brand_decision_required": {
+            "type": "object",
+            "properties": {
+              "drafting": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "detected_brand_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "existing_brands": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_market": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "keywords": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "brand_id",
+                    "name",
+                    "keywords"
+                  ]
+                }
+              },
+              "can_create_brand": {
+                "type": "boolean"
+              },
+              "brand_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "brands_used": {
+                "type": "integer"
+              },
+              "resolve_with": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "drafting"
+            ]
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "video_direction": {
+            "type": "object",
+            "properties": {
+              "video_request_id": {
+                "type": "string"
+              },
+              "drafting": {
+                "type": "boolean"
+              },
+              "creative_direction": {
+                "type": "string"
+              },
+              "draft_failed": {
+                "type": "boolean"
+              },
+              "draft_error": {
+                "type": "string"
+              },
+              "creator_note": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "format_options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "summary"
+                  ]
+                }
+              },
+              "selected_image_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ratio": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "enable_audio": {
+                "type": "boolean"
+              },
+              "target_market": {
+                "type": "string"
+              },
+              "credit_cost": {
+                "type": "number"
+              },
+              "affordable": {
+                "type": "boolean"
+              },
+              "editable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "video_request_id",
+              "drafting",
+              "draft_failed",
+              "format_options",
+              "selected_image_ids",
+              "credit_cost",
+              "editable"
+            ]
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "identity_replaced": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          }
+        },
+        "required": [
+          "product_id",
+          "image_count",
+          "usable_image_count",
+          "images",
+          "state",
+          "workbench_url",
+          "videos"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -297,6 +2007,57 @@
         },
         "required": [
           "brand_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "brand_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "target_market": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "voice": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "is_default": {
+            "type": "boolean"
+          },
+          "product_count": {
+            "type": "integer"
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "brand_id",
+          "name",
+          "keywords",
+          "configured",
+          "is_default",
+          "product_count",
+          "next_step"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -377,6 +2138,303 @@
         },
         "required": [
           "product_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "link_url": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "import_status": {
+            "type": "string"
+          },
+          "import_failed_reason": {
+            "type": "string"
+          },
+          "image_count": {
+            "type": "integer"
+          },
+          "usable_image_count": {
+            "type": "integer"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "filename": {
+                  "type": "string"
+                },
+                "usable": {
+                  "type": "boolean"
+                },
+                "selected": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "image_id",
+                "url",
+                "filename",
+                "usable",
+                "selected"
+              ]
+            }
+          },
+          "state": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "object",
+            "properties": {
+              "brand_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "target_market": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "keywords": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "brand_id",
+              "name",
+              "keywords"
+            ]
+          },
+          "brand_decision_required": {
+            "type": "object",
+            "properties": {
+              "drafting": {
+                "type": "boolean"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "detected_brand_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "existing_brands": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "brand_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "target_market": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "keywords": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "brand_id",
+                    "name",
+                    "keywords"
+                  ]
+                }
+              },
+              "can_create_brand": {
+                "type": "boolean"
+              },
+              "brand_limit": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "brands_used": {
+                "type": "integer"
+              },
+              "resolve_with": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "drafting"
+            ]
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "video_direction": {
+            "type": "object",
+            "properties": {
+              "video_request_id": {
+                "type": "string"
+              },
+              "drafting": {
+                "type": "boolean"
+              },
+              "creative_direction": {
+                "type": "string"
+              },
+              "draft_failed": {
+                "type": "boolean"
+              },
+              "draft_error": {
+                "type": "string"
+              },
+              "creator_note": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "format_options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "summary"
+                  ]
+                }
+              },
+              "selected_image_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ratio": {
+                "type": "string"
+              },
+              "resolution": {
+                "type": "string"
+              },
+              "duration_seconds": {
+                "type": "integer"
+              },
+              "enable_audio": {
+                "type": "boolean"
+              },
+              "target_market": {
+                "type": "string"
+              },
+              "credit_cost": {
+                "type": "number"
+              },
+              "affordable": {
+                "type": "boolean"
+              },
+              "editable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "video_request_id",
+              "drafting",
+              "draft_failed",
+              "format_options",
+              "selected_image_ids",
+              "credit_cost",
+              "editable"
+            ]
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "image_count",
+          "usable_image_count",
+          "images",
+          "state",
+          "workbench_url",
+          "videos"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -461,6 +2519,101 @@
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "video_request_id": {
+            "type": "string"
+          },
+          "drafting": {
+            "type": "boolean"
+          },
+          "creative_direction": {
+            "type": "string"
+          },
+          "draft_failed": {
+            "type": "boolean"
+          },
+          "draft_error": {
+            "type": "string"
+          },
+          "creator_note": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "format_options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "summary"
+              ]
+            }
+          },
+          "selected_image_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ratio": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "duration_seconds": {
+            "type": "integer"
+          },
+          "enable_audio": {
+            "type": "boolean"
+          },
+          "target_market": {
+            "type": "string"
+          },
+          "credit_cost": {
+            "type": "number"
+          },
+          "affordable": {
+            "type": "boolean"
+          },
+          "editable": {
+            "type": "boolean"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "opened_new_video": {
+            "type": "boolean"
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "video_request_id",
+          "drafting",
+          "draft_failed",
+          "format_options",
+          "selected_image_ids",
+          "credit_cost",
+          "editable",
+          "product_id",
+          "opened_new_video"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
@@ -486,6 +2639,102 @@
         },
         "required": [
           "product_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "video_request_id": {
+            "type": "string"
+          },
+          "drafting": {
+            "type": "boolean"
+          },
+          "creative_direction": {
+            "type": "string"
+          },
+          "draft_failed": {
+            "type": "boolean"
+          },
+          "draft_error": {
+            "type": "string"
+          },
+          "creator_note": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "format_options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "summary"
+              ]
+            }
+          },
+          "selected_image_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ratio": {
+            "type": "string"
+          },
+          "resolution": {
+            "type": "string"
+          },
+          "duration_seconds": {
+            "type": "integer"
+          },
+          "enable_audio": {
+            "type": "boolean"
+          },
+          "target_market": {
+            "type": "string"
+          },
+          "credit_cost": {
+            "type": "number"
+          },
+          "affordable": {
+            "type": "boolean"
+          },
+          "editable": {
+            "type": "boolean"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "opened_new_video": {
+            "type": "boolean"
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "video_request_id",
+          "drafting",
+          "draft_failed",
+          "format_options",
+          "selected_image_ids",
+          "credit_cost",
+          "editable",
+          "product_id",
+          "opened_new_video",
+          "next_step"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
@@ -518,6 +2767,79 @@
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "opened_new_video": {
+            "type": "boolean"
+          },
+          "queued": {
+            "type": "integer"
+          },
+          "skipped_insufficient_credit": {
+            "type": "integer"
+          },
+          "credits_charged": {
+            "type": "number"
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "video_request_id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_reason": {
+                  "type": "string"
+                },
+                "output_url": {
+                  "type": "string"
+                },
+                "watermarked": {
+                  "type": "boolean"
+                },
+                "duration_seconds": {
+                  "type": "integer"
+                },
+                "script": {
+                  "type": "string"
+                },
+                "share_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "video_request_id",
+                "status"
+              ]
+            }
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "credits_remaining": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "product_id",
+          "opened_new_video",
+          "queued",
+          "skipped_insufficient_credit",
+          "credits_charged",
+          "videos",
+          "next_step",
+          "credits_remaining"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
@@ -539,6 +2861,54 @@
         },
         "required": [
           "video_request_id"
+        ],
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "video_request_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "failed_reason": {
+            "type": "string"
+          },
+          "output_url": {
+            "type": "string"
+          },
+          "watermarked": {
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "type": "integer"
+          },
+          "script": {
+            "type": "string"
+          },
+          "share_url": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "workbench_url": {
+            "type": "string"
+          },
+          "next_step": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "video_request_id",
+          "status",
+          "product_id",
+          "workbench_url"
         ],
         "$schema": "https://json-schema.org/draft/2020-12/schema"
       },
