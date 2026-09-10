@@ -94,7 +94,10 @@ Aplicación de Claude: añade un conector personalizado con esta dirección e in
 lo pida. ChatGPT en la web: activa el modo de desarrollador en Ajustes, Apps, Avanzado y añade la
 dirección como conector; en un espacio de trabajo Business o Enterprise, un administrador la
 publica como aplicación para todo el equipo. La aplicación de escritorio de ChatGPT acepta la misma
-dirección en Ajustes, Servidores MCP, y la comparte con Codex.
+dirección en Ajustes, Servidores MCP, y la comparte con Codex. En ChatGPT, adjunta las fotos del
+producto a la conversación y pide el vídeo: el plugin recibe los adjuntos directamente
+(`image_files` en `create_product_from_images`, `add_image_files` en `update_product`), así que
+allí las fotos no necesitan adaptador ni token.
 
 ### Cualquier otro cliente o agente MCP
 
@@ -168,7 +171,9 @@ acepta `image_paths` (rutas a los archivos, hasta 9, de 8 MB cada uno) en lugar 
 `update_product` acepta `add_image_paths`. Los archivos se empaquetan y se envían directamente a
 InstantClips como fotos del producto; no se descarga nada de ningún sitio. Arrastra los archivos a
 un cliente que le pase sus rutas al asistente (Claude Code, Cursor, VS Code, agentes de terminal) y
-di qué quieres crear.
+di qué quieres crear. Envía `image_paths` solo: si en la misma llamada van también `image_urls`, el
+adaptador la rechaza en lugar de descartar las URL; añade las fotos alojadas después con
+`update_product`.
 
 ## Instrucciones para empezar
 

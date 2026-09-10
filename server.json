@@ -3,7 +3,7 @@
   "name": "ai.instantclips/instantclips",
   "title": "InstantClips",
   "description": "Create branded vertical video ads from ecommerce product URLs or product photos.",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "websiteUrl": "https://instantclips.ai/automate/",
   "repository": {
     "url": "https://github.com/InstantStudioAI/instantclips-mcp",
@@ -24,8 +24,8 @@
       "headers": [
         {
           "name": "Authorization",
-          "description": "Bearer token from app.instantclips.ai/settings#ai-access",
-          "isRequired": true,
+          "description": "Optional: sign in through OAuth when the client offers it (the server announces the flow on its 401); otherwise a Bearer token from app.instantclips.ai/settings#ai-access.",
+          "isRequired": false,
           "isSecret": true
         }
       ]
@@ -36,7 +36,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "instantclips-mcp",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "transport": {
         "type": "stdio"
       },

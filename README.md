@@ -88,6 +88,9 @@ Claude app: add a custom connector with this address and sign in when it asks. C
 web: turn on Developer mode under Settings, Apps, Advanced, then add the address as a connector;
 on a Business or Enterprise workspace an admin publishes it as an app for everyone instead. The
 ChatGPT desktop app takes the same address under Settings, MCP servers, and shares it with Codex.
+In ChatGPT, attach the product photos to the conversation and ask for the video: the plugin takes
+attachments directly (`image_files` on `create_product_from_images`, `add_image_files` on
+`update_product`), so photos need no adapter and no token there.
 
 ### Any other MCP client or agent
 
@@ -158,6 +161,8 @@ that never left your laptop. Through the adapter, `create_product_from_images` t
 `add_image_paths`. The files are packaged and posted straight to InstantClips as the product's
 photos — nothing is downloaded from anywhere. Drag the files into a client that hands the
 assistant their paths (Claude Code, Cursor, VS Code, terminal agents) and say what you want made.
+Send `image_paths` on its own: with hosted `image_urls` in the same call the adapter refuses
+rather than dropping the URLs; add hosted photos afterwards with `update_product`.
 
 ## Starter prompts
 

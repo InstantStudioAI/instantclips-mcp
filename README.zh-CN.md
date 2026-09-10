@@ -78,7 +78,9 @@ url = "https://app.instantclips.ai/mcp"
 
 Claude 应用：用这个地址添加自定义连接器，按提示登录。网页版 ChatGPT：在 设置 › Apps › 高级 中
 开启开发者模式，再把地址添加为连接器；Business 或 Enterprise 工作区则由管理员发布为全员可用的
-应用。ChatGPT 桌面版在 设置 › MCP 服务器 中填入同一地址，并与 Codex 共享配置。
+应用。ChatGPT 桌面版在 设置 › MCP 服务器 中填入同一地址，并与 Codex 共享配置。在 ChatGPT 里，把商品照片
+作为附件添加到对话中并提出需求即可：插件会直接接收附件（`create_product_from_images` 的 `image_files`、
+`update_product` 的 `add_image_files`），因此在那里传照片不需要适配器，也不需要令牌。
 
 ### 其他 MCP 客户端或智能体
 
@@ -143,7 +145,8 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 `create_product_from_images` 可用 `image_paths`（文件路径，最多 9 个，每个不超过 8 MB）代替
 `image_urls`，`update_product` 可用 `add_image_paths`。文件会被打包并直接发送到 InstantClips 作为商品照片，
 不会从任何地方下载。把文件拖进会把路径交给助手的客户端（Claude Code、Cursor、VS Code、终端智能体），
-然后说出你想要的视频即可。
+然后说出你想要的视频即可。`image_paths` 请单独发送：同一次调用里若还带有 `image_urls`，适配器会拒绝，
+而不是悄悄丢弃这些 URL；托管照片可以之后用 `update_product` 添加。
 
 ## 入门提示语
 

@@ -192,7 +192,7 @@ test("serves initialization and the bundled tool manifest without contacting ups
   const initialized = await nextMessage();
   assert.equal(initialized.id, 1);
   assert.equal(initialized.result.serverInfo.name, "instantclips");
-  assert.equal(initialized.result.serverInfo.version, "0.5.0");
+  assert.equal(initialized.result.serverInfo.version, "0.6.0");
   assert.deepEqual(initialized.result.capabilities, { tools: {} });
   assert.match(initialized.result.instructions, /generate_video/);
 
@@ -226,8 +226,15 @@ test("serves initialization and the bundled tool manifest without contacting ups
   assert.deepEqual(fromImages.inputSchema.required, ["name"]);
   assert.equal(fromImages.inputSchema.properties.image_paths.type, "array");
   assert.match(fromImages.description, /image_paths/);
+  // The hosted server's attachment parameters (ChatGPT's file inputs) are
+  // not served here: a stdio client has nothing to put in them.
+  assert.equal(fromImages.inputSchema.properties.image_files, undefined);
+  assert.equal(fromImages._meta, undefined);
   const updateProduct = listed.result.tools.find((tool) => tool.name === "update_product");
   assert.equal(updateProduct.inputSchema.properties.add_image_paths.type, "array");
+  assert.equal(updateProduct.inputSchema.properties.add_image_files, undefined);
+  assert.equal(updateProduct._meta, undefined);
+  assert.equal(updateProduct.inputSchema.properties.add_image_urls.type, "array", "the hosted-URL parameter stays");
   run.child.stdin.write(
     `${JSON.stringify({ jsonrpc: "2.0", id: 3, method: "ping", params: {} })}\n`,
   );
@@ -445,7 +452,7 @@ test("package and registry identities keep the domain-authenticated namespace", 
 
   assert.equal(packageJson.mcpName, "ai.instantclips/instantclips");
   assert.equal(packageJson.mcpName, serverJson.name);
-  assert.equal(serverJson.version, "1.4.0");
+  assert.equal(serverJson.version, "1.5.0");
   assert.equal(serverJson.remotes.length, 1);
   assert.equal(serverJson.packages.length, 1);
   assert.equal(serverJson.packages[0].identifier, packageJson.name);
@@ -528,7 +535,7 @@ test("uploads photos from this machine as multipart, never as URLs", async (t) =
   assert.deepEqual(await run.exited, { code: 0, signal: null });
 });
 
-test("refuses a missing file, a non-image, and add_image_paths mixed with other fields, without contacting upstream", async (t) => {
+test("refuses a missing file, a non-image, image_paths mixed with hosted URLs, and add_image_paths mixed with other fields, without contacting upstream", async (t) => {
   const mock = await mockMcpServer();
   t.after(mock.close);
   const { run, nextMessage } = await startedBridge(t, mock);
@@ -547,6 +554,10 @@ test("refuses a missing file, a non-image, and add_image_paths mixed with other 
   const mixed = await call(4, { product_id: "p-1", name: "New name", add_image_paths: ["/nowhere/mug.png"] }, "update_product");
   assert.equal(mixed.result.isError, true);
   assert.match(mixed.result.content[0].text, /separate update_product call/);
+  // 1.4.0 uploaded the files and silently dropped the URLs.
+  const both = await call(5, { name: "Mug", image_paths: ["/nowhere/mug.png"], image_urls: ["https://cdn.example.com/mug.jpg"] });
+  assert.equal(both.result.isError, true);
+  assert.match(both.result.content[0].text, /image_paths alone/);
   assert.deepEqual(mock.requests, []);
   run.child.stdin.end();
   assert.deepEqual(await run.exited, { code: 0, signal: null });

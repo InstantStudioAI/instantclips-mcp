@@ -141,6 +141,14 @@ function writeDiagnostic(failure) {
 // serves. The files are read and posted as multipart to the hosted upload
 // endpoints under the same bearer — packaged and uploaded, never downloaded
 // from anywhere.
+//
+// The hosted server also takes the conversation's attachments — `image_files`
+// and `add_image_files`, declared for ChatGPT through `_meta["openai/fileParams"]`
+// — which a stdio client has no way to fill. Those two parameters and the
+// `_meta` are removed from the schemas served here, so the model sees one
+// local-file parameter and not a hosted one it cannot use. A call that sends
+// `image_paths` together with hosted URLs is refused rather than uploading
+// the files and dropping the URLs, which is what 1.4.0 did.
 const MAX_LOCAL_IMAGES = 9;
 const MAX_LOCAL_IMAGE_BYTES = 8 * 1024 * 1024;
 const LOCAL_IMAGE_TYPES = {
@@ -159,14 +167,17 @@ const LOCAL_UPLOAD_PARAMETERS = {
   create_product_from_images: {
     name: "image_paths",
     replaces: "image_urls",
+    hides: "image_files",
     description:
       `Paths to photos on this machine, up to ${MAX_LOCAL_IMAGES}, ${MAX_LOCAL_IMAGE_BYTES / 1024 / 1024} MB each. ` +
-      "This adapter uploads the files itself; use it instead of image_urls for local photos.",
+      "This adapter uploads the files itself; use it instead of image_urls for local photos, never with them.",
     note:
-      "Through this adapter, `image_paths` (files on this machine) can replace `image_urls`; the files are uploaded directly.",
+      "Through this adapter, `image_paths` (files on this machine) replaces `image_urls`; the files are uploaded directly. " +
+      "Send one or the other, not both.",
   },
   update_product: {
     name: "add_image_paths",
+    hides: "add_image_files",
     description:
       `Paths to photos on this machine to add, up to ${MAX_LOCAL_IMAGES}, ${MAX_LOCAL_IMAGE_BYTES / 1024 / 1024} MB each. ` +
       "This adapter uploads the files itself. Send it with product_id alone; other fields go in a separate call.",
@@ -180,16 +191,33 @@ function withLocalUploads(tools) {
     const extra = LOCAL_UPLOAD_PARAMETERS[tool.name];
     if (!extra) return tool;
     const schema = tool.inputSchema || { type: "object", properties: {} };
+    const { [extra.hides]: _hidden, ...kept } = schema.properties || {};
     const properties = {
-      ...schema.properties,
-      [extra.name]: { type: "array", items: { type: "string" }, description: extra.description },
+      ...kept,
+      [extra.name]: { type: "array", items: { type: "string" }, minItems: 1, description: extra.description },
     };
     const inputSchema = { ...schema, properties };
     if (extra.replaces && Array.isArray(schema.required)) {
       inputSchema.required = schema.required.filter((key) => key !== extra.replaces);
     }
-    return { ...tool, description: `${tool.description}\n\n${extra.note}`, inputSchema };
+    const { _meta, ...rest } = tool;
+    return {
+      ...rest,
+      ...withoutFileParam(_meta, extra.hides),
+      description: `${tool.description}\n\n${extra.note}`,
+      inputSchema,
+    };
   });
+}
+
+// → `{ _meta }` with the hidden file parameter's declaration removed, or `{}`
+// when nothing else was in it.
+function withoutFileParam(meta, hidden) {
+  if (!meta) return {};
+  const { "openai/fileParams": fileParams, ...others } = meta;
+  const remaining = (fileParams || []).filter((name) => name !== hidden);
+  const kept = remaining.length ? { ...others, "openai/fileParams": remaining } : others;
+  return Object.keys(kept).length ? { _meta: kept } : {};
 }
 
 function hasPaths(value) {
@@ -257,6 +285,13 @@ async function uploadForm(config, suffix, form) {
 async function callLocally(config, params) {
   const args = params.arguments ?? {};
   if (params.name === "create_product_from_images" && hasPaths(args.image_paths)) {
+    const hosted = ["image_urls", "image_files"].filter((key) => Array.isArray(args[key]) && args[key].length > 0);
+    if (hosted.length > 0) {
+      throw uploadError(
+        `Send image_paths alone: ${hosted.join(", ")} would be dropped. Create the product from image_paths, ` +
+          "then add hosted photos with update_product's add_image_urls.",
+      );
+    }
     const form = new FormData();
     for (const key of ["name", "description", "creator_note", "brand_id"]) {
       if (args[key] !== undefined && args[key] !== null && args[key] !== "") form.append(key, String(args[key]));

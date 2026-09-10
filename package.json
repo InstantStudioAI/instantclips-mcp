@@ -1,7 +1,7 @@
 {
   "name": "instantclips-mcp",
   "mcpName": "ai.instantclips/instantclips",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Use the hosted InstantClips MCP server from stdio-only clients.",
   "type": "module",
   "bin": {
