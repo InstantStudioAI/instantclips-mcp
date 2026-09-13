@@ -192,7 +192,7 @@ test("serves initialization and the bundled tool manifest without contacting ups
   const initialized = await nextMessage();
   assert.equal(initialized.id, 1);
   assert.equal(initialized.result.serverInfo.name, "instantclips");
-  assert.equal(initialized.result.serverInfo.version, "0.6.0");
+  assert.equal(initialized.result.serverInfo.version, "0.6.1");
   assert.deepEqual(initialized.result.capabilities, { tools: {} });
   assert.match(initialized.result.instructions, /generate_video/);
 
@@ -452,7 +452,7 @@ test("package and registry identities keep the domain-authenticated namespace", 
 
   assert.equal(packageJson.mcpName, "ai.instantclips/instantclips");
   assert.equal(packageJson.mcpName, serverJson.name);
-  assert.equal(serverJson.version, "1.5.0");
+  assert.equal(serverJson.version, "1.6.0");
   assert.equal(serverJson.remotes.length, 1);
   assert.equal(serverJson.packages.length, 1);
   assert.equal(serverJson.packages[0].identifier, packageJson.name);
