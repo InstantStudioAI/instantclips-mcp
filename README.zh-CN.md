@@ -53,14 +53,15 @@ Cursor 和 VS Code 的一键安装按钮。
 ### Claude Code
 
 ```bash
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp
+claude mcp add --transport http --scope user instantclips https://app.instantclips.ai/mcp
 ```
 
-然后在 Claude Code 里运行 `/mcp`，选择 InstantClips 登录。
+然后在 Claude Code 里运行 `/mcp`，选择 `instantclips` 登录。`--scope user` 会把它添加到你的所有项目；
+不加这个参数时，Claude Code 只会把服务器添加到你运行命令的那个文件夹。
 
 ### Codex
 
-将以下配置添加到 `~/.codex/config.toml`。该配置同时适用于 CLI、应用和 IDE 扩展：
+将以下配置添加到 `~/.codex/config.toml`。Codex CLI、Codex IDE 扩展和 ChatGPT 桌面版都会读取这个文件：
 
 ```toml
 [mcp_servers.instantclips]
@@ -74,13 +75,32 @@ url = "https://app.instantclips.ai/mcp"
 [设置页面](https://app.instantclips.ai/mcp)提供一键安装按钮。按钮会打开应用并添加 InstantClips，
 首次使用时登录。
 
-### Claude 应用和 ChatGPT
+### Claude 应用
 
-Claude 应用：用这个地址添加自定义连接器，按提示登录。网页版 ChatGPT：在 设置 › Apps › 高级 中
-开启开发者模式，再把地址添加为连接器；Business 或 Enterprise 工作区则由管理员发布为全员可用的
-应用。ChatGPT 桌面版在 设置 › MCP 服务器 中填入同一地址，并与 Codex 共享配置。在 ChatGPT 里，把商品照片
-作为附件添加到对话中并提出需求即可：插件会直接接收附件（`create_product_from_images` 的 `image_files`、
+1. 在 **Customize › Connectors** 中选择 **+ › Add custom connector**，粘贴
+   `https://app.instantclips.ai/mcp`，然后选择 **Add**。
+2. 选择 **Connect**，登录 InstantClips。
+3. 在对话中，通过 **+ › Connectors** 打开 InstantClips。
+
+Team 或 Enterprise 套餐需由所有者先在 **Organization settings › Connectors** 中添加，之后每位成员再在
+**Customize › Connectors** 中连接。
+
+### ChatGPT
+
+1. 在 chatgpt.com 的 **Settings › Security and login** 中开启 **Developer mode**（开发者模式）。
+2. 打开 [chatgpt.com/plugins](https://chatgpt.com/plugins)，选择 **+**，为
+   `https://app.instantclips.ai/mcp` 创建一个使用 OAuth 的应用，然后按提示登录 InstantClips。
+3. 在对话中，从 **+** 菜单选择 **Developer mode**，再选择 InstantClips。
+
+在 Business、Enterprise 或 Edu 工作区，由管理员在 **Workspace settings › Apps › Create** 中创建应用，
+并发布给整个工作区。
+
+在 ChatGPT 里，把商品照片作为附件添加到对话中并提出需求即可：插件会直接接收附件（`create_product_from_images` 的 `image_files`、
 `update_product` 的 `add_image_files`），因此在那里传照片不需要适配器，也不需要令牌。
+
+菜单名称以各应用 2026 年 9 月的英文界面为准。如有变动，请参阅 Claude 的
+[自定义连接器指南](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)和
+OpenAI 的[开发者模式指南](https://developers.openai.com/api/docs/guides/developer-mode)。
 
 ### 其他 MCP 客户端或智能体
 
@@ -97,7 +117,7 @@ OpenClaw、Hermes，或你自己写的 agent：通过 Streamable HTTP 指向这�
 
 ```bash
 # Claude Code
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
+claude mcp add --transport http --scope user instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```toml
@@ -108,10 +128,9 @@ http_headers = { Authorization = "Bearer YOUR_TOKEN" }
 ```
 
 如果不想把令牌写入 Codex 的配置文件，请将请求头配置替换为
-`bearer_token_env_var = "INSTANTCLIPS_TOKEN"`，然后在 shell 中导出该环境变量。Claude 应用可在
-连接器中以请求头的形式使用令牌（自定义请求头仍处于测试阶段）；ChatGPT 连接器通过登录流程
-鉴权，而不是粘贴密钥。其他任何客户端发送 `Authorization: Bearer` 请求头即可。传输协议中没有
-InstantClips 专用内容。
+`bearer_token_env_var = "INSTANTCLIPS_TOKEN"`，然后在 shell 中导出该环境变量。其他任何客户端发送
+`Authorization: Bearer` 请求头即可。传输协议中没有 InstantClips 专用内容。聊天应用总有浏览器可以登录，
+因此按上面的步骤连接即可，无需令牌。
 
 #### 仅支持 stdio 的客户端和无界面自动化
 

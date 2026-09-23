@@ -61,14 +61,16 @@ only for scripts and automated runners that cannot open a sign-in page.
 ### Claude Code
 
 ```bash
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp
+claude mcp add --transport http --scope user instantclips https://app.instantclips.ai/mcp
 ```
 
-Then run `/mcp` inside Claude Code and choose InstantClips to sign in.
+Then run `/mcp` inside Claude Code and choose `instantclips` to sign in. `--scope user` adds it to
+every project; without it, Claude Code adds a server only to the folder you run the command in.
 
 ### Codex
 
-Add to `~/.codex/config.toml`, which covers the CLI, the app and the IDE extension together:
+Add to `~/.codex/config.toml`, which the Codex CLI, the Codex IDE extension and the ChatGPT desktop
+app all read:
 
 ```toml
 [mcp_servers.instantclips]
@@ -82,15 +84,34 @@ Then run `codex mcp login instantclips` to sign in.
 One-click install buttons are on the [setup page](https://app.instantclips.ai/mcp). They open
 the app, add InstantClips, and sign you in on first use.
 
-### Claude app and ChatGPT
+### Claude app
 
-Claude app: add a custom connector with this address and sign in when it asks. ChatGPT on the
-web: turn on Developer mode under Settings, Apps, Advanced, then add the address as a connector;
-on a Business or Enterprise workspace an admin publishes it as an app for everyone instead. The
-ChatGPT desktop app takes the same address under Settings, MCP servers, and shares it with Codex.
+1. In **Customize › Connectors**, select **+ › Add custom connector**, paste
+   `https://app.instantclips.ai/mcp` and select **Add**.
+2. Select **Connect** and sign in to InstantClips.
+3. In a conversation, turn InstantClips on under **+ › Connectors**.
+
+On a Team or Enterprise plan, an owner adds it first under **Organization settings › Connectors**,
+and each member then connects it in **Customize › Connectors**.
+
+### ChatGPT
+
+1. On chatgpt.com, turn on **Developer mode** in **Settings › Security and login**.
+2. Open [chatgpt.com/plugins](https://chatgpt.com/plugins), select **+** and create an app for
+   `https://app.instantclips.ai/mcp` with OAuth, then sign in to InstantClips when asked.
+3. In a conversation, choose **Developer mode** from the **+** menu and select InstantClips.
+
+On a Business, Enterprise or Edu workspace, an admin creates the app under
+**Workspace settings › Apps › Create** and publishes it for the workspace.
+
 In ChatGPT, attach the product photos to the conversation and ask for the video: the plugin takes
 attachments directly (`image_files` on `create_product_from_images`, `add_image_files` on
 `update_product`), so photos need no adapter and no token there.
+
+Menu names are the apps' own as of September 2026. If they have moved, Claude's
+[custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
+and OpenAI's [developer mode guide](https://developers.openai.com/api/docs/guides/developer-mode)
+have the current ones.
 
 ### Any other MCP client or agent
 
@@ -109,7 +130,7 @@ With a token, the same clients look like this:
 
 ```bash
 # Claude Code
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
+claude mcp add --transport http --scope user instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```toml
@@ -120,10 +141,9 @@ http_headers = { Authorization = "Bearer YOUR_TOKEN" }
 ```
 
 To keep the token out of the Codex file, swap the header for `bearer_token_env_var = "INSTANTCLIPS_TOKEN"`
-and export it in your shell instead. The Claude app takes a token as a request header on the
-connector (request headers are still in beta); ChatGPT connectors sign in through the sign-in flow
-rather than a pasted key. Any other client sends an `Authorization: Bearer` header. Nothing on the
-wire is InstantClips-specific.
+and export it in your shell instead. Any other client sends an `Authorization: Bearer` header.
+Nothing on the wire is InstantClips-specific. The chat apps always have a browser to sign in with,
+so they use the steps above rather than a token.
 
 #### Stdio-only clients and headless runners
 

@@ -66,15 +66,17 @@ de inicio de sesión.
 ### Claude Code
 
 ```bash
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp
+claude mcp add --transport http --scope user instantclips https://app.instantclips.ai/mcp
 ```
 
-Después ejecuta `/mcp` dentro de Claude Code y elige InstantClips para iniciar sesión.
+Después ejecuta `/mcp` dentro de Claude Code y elige `instantclips` para iniciar sesión.
+`--scope user` lo añade a todos tus proyectos; sin esa opción, Claude Code añade el servidor solo a
+la carpeta en la que ejecutas el comando.
 
 ### Codex
 
-Añade lo siguiente a `~/.codex/config.toml`; la configuración se aplica a la CLI, la aplicación y
-la extensión del IDE:
+Añade lo siguiente a `~/.codex/config.toml`, el archivo que leen la CLI de Codex, la extensión de
+Codex para el IDE y la aplicación de escritorio de ChatGPT:
 
 ```toml
 [mcp_servers.instantclips]
@@ -88,16 +90,36 @@ Después ejecuta `codex mcp login instantclips` para iniciar sesión.
 La [página de configuración](https://app.instantclips.ai/mcp) incluye botones de instalación de un
 clic. Abren la aplicación, añaden InstantClips y te piden iniciar sesión la primera vez.
 
-### Aplicación de Claude y ChatGPT
+### Aplicación de Claude
 
-Aplicación de Claude: añade un conector personalizado con esta dirección e inicia sesión cuando te
-lo pida. ChatGPT en la web: activa el modo de desarrollador en Ajustes, Apps, Avanzado y añade la
-dirección como conector; en un espacio de trabajo Business o Enterprise, un administrador la
-publica como aplicación para todo el equipo. La aplicación de escritorio de ChatGPT acepta la misma
-dirección en Ajustes, Servidores MCP, y la comparte con Codex. En ChatGPT, adjunta las fotos del
-producto a la conversación y pide el vídeo: el plugin recibe los adjuntos directamente
-(`image_files` en `create_product_from_images`, `add_image_files` en `update_product`), así que
-allí las fotos no necesitan adaptador ni token.
+1. En **Customize › Connectors**, selecciona **+ › Add custom connector**, pega
+   `https://app.instantclips.ai/mcp` y selecciona **Add**.
+2. Selecciona **Connect** e inicia sesión en InstantClips.
+3. En una conversación, activa InstantClips en **+ › Connectors**.
+
+En un plan Team o Enterprise, primero un propietario lo añade en
+**Organization settings › Connectors**; después, cada miembro lo conecta en
+**Customize › Connectors**.
+
+### ChatGPT
+
+1. En chatgpt.com, activa **Developer mode** en **Settings › Security and login**.
+2. Abre [chatgpt.com/plugins](https://chatgpt.com/plugins), selecciona **+** y crea una aplicación
+   para `https://app.instantclips.ai/mcp` con OAuth; después, inicia sesión en InstantClips cuando
+   te lo pida.
+3. En una conversación, elige **Developer mode** en el menú **+** y selecciona InstantClips.
+
+En un espacio de trabajo Business, Enterprise o Edu, un administrador crea la aplicación en
+**Workspace settings › Apps › Create** y la publica para todo el espacio de trabajo.
+
+En ChatGPT, adjunta las fotos del producto a la conversación y pide el vídeo: el plugin recibe los
+adjuntos directamente (`image_files` en `create_product_from_images`, `add_image_files` en
+`update_product`), así que allí las fotos no necesitan adaptador ni token.
+
+Los nombres de los menús son los de la interfaz en inglés de cada aplicación, en septiembre de
+2026. Si han cambiado, consulta la
+[guía de conectores personalizados de Claude](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
+y la [guía del modo de desarrollador de OpenAI](https://developers.openai.com/api/docs/guides/developer-mode).
 
 ### Cualquier otro cliente o agente MCP
 
@@ -117,7 +139,7 @@ Con un token, los mismos clientes quedan así:
 
 ```bash
 # Claude Code
-claude mcp add --transport http instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
+claude mcp add --transport http --scope user instantclips https://app.instantclips.ai/mcp --header "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ```toml
@@ -128,11 +150,10 @@ http_headers = { Authorization = "Bearer YOUR_TOKEN" }
 ```
 
 Para no guardar el token en el archivo de Codex, sustituye el encabezado por
-`bearer_token_env_var = "INSTANTCLIPS_TOKEN"` y expórtalo como variable de entorno en tu shell. La
-aplicación de Claude acepta el token como encabezado de solicitud en el conector (los encabezados
-de solicitud siguen en beta); los conectores de ChatGPT inician sesión mediante el flujo de inicio
-de sesión en lugar de una clave pegada. Cualquier otro cliente envía un encabezado
-`Authorization: Bearer`. El protocolo no contiene nada específico de InstantClips.
+`bearer_token_env_var = "INSTANTCLIPS_TOKEN"` y expórtalo como variable de entorno en tu shell.
+Cualquier otro cliente envía un encabezado `Authorization: Bearer`. El protocolo no contiene nada
+específico de InstantClips. Las aplicaciones de chat siempre tienen un navegador para iniciar
+sesión, así que usan los pasos de arriba en lugar de un token.
 
 #### Clientes que solo admiten stdio y procesos sin interfaz
 
