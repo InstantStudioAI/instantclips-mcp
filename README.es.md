@@ -294,8 +294,18 @@ de nombres de marca `ai.instantclips`; no lo sustituyas por un nombre `io.github
 firma no se guarda en el repositorio: `.gitignore` cubre `*.pem`, y una clave privada incluida en un
 commit es una clave publicada.
 
-`npm publish` pide una confirmación única en el navegador, así que ejecútalo en una terminal
-interactiva: desde un script se detiene con `EOTP` y no publica nada.
+El paquete npm se publica desde GitHub Actions, no desde un portátil. Haz commit del cambio de
+versión (`package.json`, `server.json` y los valores fijados en `test/shim.test.js`) y sube una
+etiqueta con su nombre (`git tag v1.7.2 && git push origin main v1.7.2`);
+`.github/workflows/publish.yml` ejecuta las pruebas y publica mediante la publicación de confianza
+de npm (trusted publishing), sin token de npm ni confirmación en el navegador. El trabajo se detiene
+si la etiqueta no coincide con el `version` de `package.json`. El publicador de confianza del paquete
+en npmjs.com nombra este repositorio y `publish.yml`, así que renombrar el archivo del flujo de
+trabajo impide publicar.
+
+Una versión nueva puede tardar varios minutos en aparecer en npm, y el registro rechaza una entrada
+cuya versión de npm no encuentra ("version … was not found"; no cambia nada). Ejecuta el paso de
+`mcp-publisher` cuando `https://registry.npmjs.org/instantclips-mcp/<versión>` responda.
 
 Inicia sesión y publica en un mismo comando — el token del registro caduca a los cinco minutos — y el
 dominio se verifica por HTTP, no por DNS: `instantclips.ai/.well-known/mcp-registry-auth`, en el

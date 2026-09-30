@@ -1,0 +1,34 @@
+# Publishes the npm package when a version tag is pushed. npm's trusted
+# publishing authenticates this workflow over OIDC, so there is no npm token
+# in the repository and no browser confirmation on anyone's machine. The
+# package's trusted publisher on npmjs.com must name this file: publish.yml.
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write # the OIDC token npm exchanges for a publish credential
+  contents: read
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - name: The tag names the version being published
+        run: |
+          version="v$(node -p 'require("./package.json").version')"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json ($version)"
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm publish

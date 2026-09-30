@@ -274,8 +274,16 @@ Publish the npm package first, then re-publish this same registry entry with
 `ai.instantclips` namespace; do not replace it with an `io.github.*` name. The signing key stays out
 of the repository — `.gitignore` covers `*.pem`, and a committed private key is a published one.
 
-`npm publish` asks for a one-time confirmation in the browser, so run it in an interactive
-terminal: from a script it stops with `EOTP` and publishes nothing.
+npm is published from GitHub Actions, not from a laptop. Commit the version bump (`package.json`,
+`server.json`, and the pins in `test/shim.test.js`), then push a tag named for it
+(`git tag v1.7.2 && git push origin main v1.7.2`); `.github/workflows/publish.yml` runs the tests
+and publishes through npm's trusted publishing, with no npm token and no browser confirmation. The job stops if the tag does not match `package.json`'s `version`. The package's
+trusted publisher on npmjs.com names this repository and `publish.yml`, so renaming the workflow
+file breaks publishing.
+
+A new version can take several minutes to appear on npm, and the registry refuses an entry whose
+npm version it cannot find ("version … was not found"; nothing changes). Run the `mcp-publisher`
+step once `https://registry.npmjs.org/instantclips-mcp/<version>` answers.
 
 Log in and publish in one command — the registry token expires five minutes after login — and the
 domain is verified over HTTP, not DNS: `instantclips.ai/.well-known/mcp-registry-auth` on the marketing site

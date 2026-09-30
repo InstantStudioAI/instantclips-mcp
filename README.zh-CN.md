@@ -252,7 +252,14 @@ npm 软件包中的 `mcpName` 必须与该注册表名称完全一致。仓库�
 域名身份验证会保留品牌命名空间 `ai.instantclips`；请勿将其替换为 `io.github.*` 名称。签名密钥不
 存放在仓库中：`.gitignore` 已忽略 `*.pem`，因为一旦提交私钥，就等于公开了私钥。
 
-`npm publish` 需要在浏览器里做一次性确认，所以要在交互式终端里运行：在脚本里运行会以 `EOTP` 中止，什么也不发布。
+npm 软件包从 GitHub Actions 发布，而不是从个人电脑发布。先提交版本号的修改（`package.json`、`server.json` 以及 `test/shim.test.js` 中写死的版本号），再推送以该版本命名的标签
+（`git tag v1.7.2 && git push origin main v1.7.2`）；`.github/workflows/publish.yml` 会运行测试，并通过
+npm 的可信发布（trusted publishing）完成发布，不需要 npm 令牌，也不需要在浏览器里确认。标签与
+`package.json` 的 `version` 不一致时，任务会中止。npmjs.com 上该软件包的可信发布者指定了本仓库和
+`publish.yml`，所以重命名这个工作流文件会导致无法发布。
+
+新版本可能要过几分钟才会出现在 npm 上，而注册表会拒绝找不到对应 npm 版本的条目（"version … was not found"，不会有任何改动）。
+等 `https://registry.npmjs.org/instantclips-mcp/<版本>` 能返回结果后，再运行 `mcp-publisher` 这一步。
 
 登录和发布要在同一条命令里完成——注册表令牌登录五分钟后就会过期——域名验证走的是 HTTP 而非 DNS：营销站点上的
 `instantclips.ai/.well-known/mcp-registry-auth` 提供这把密钥的公钥部分（`v=MCPv1; k=ed25519; p=…`），
