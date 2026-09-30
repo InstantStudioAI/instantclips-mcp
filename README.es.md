@@ -214,9 +214,9 @@ El flujo de trabajo, en orden:
    `create_product_from_images` cuando no haya una página que leer.
 2. **Esperar el borrador** — consulta `get_product` periódicamente hasta que terminen la importación
    y la preparación del plan.
-3. **Revisarlo y orientarlo** — el plan se devuelve como texto: gancho, enfoque del contenido,
-   formato, pautas de ejecución y restricciones. `update_video_direction` permite editarlo y
-   `redraft_video_direction` propone otro enfoque.
+3. **Revisarlo y orientarlo** — el plan se devuelve como texto para que el usuario lo revise.
+   `update_video_direction` cambia lo que haga falta y `redraft_video_direction` propone otro
+   enfoque.
 4. **Generar** — usa `generate_video` pasando `expected_credit_cost`: el coste que se le indicó al
    usuario, tal como lo informó `get_product`. Si no coincide, se rechaza sin cobrar.
 5. **Recoger el resultado** — consulta `get_video` periódicamente para obtener el MP4 terminado y

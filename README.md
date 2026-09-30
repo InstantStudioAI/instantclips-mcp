@@ -201,9 +201,9 @@ The workflow, in order:
 1. **Import** — `import_product_from_url` for a store page, or `create_product_from_images` when
    there is no page to read.
 2. **Wait for the draft** — poll `get_product` until the import and the plan have finished.
-3. **Read and steer it** — the plan comes back as text: hook, content focus, format, execution
-   guidelines, restrictions. `update_video_direction` edits it, `redraft_video_direction` asks
-   for another angle.
+3. **Read and steer it** — the plan comes back as text for the user to review.
+   `update_video_direction` changes anything in it, `redraft_video_direction` asks for another
+   angle.
 4. **Generate** — `generate_video`, passing `expected_credit_cost`: the cost the user was told, as
    `get_product` reported it. A mismatch is refused without charging.
 5. **Collect** — poll `get_video` for the finished MP4 and a public share link.

@@ -184,8 +184,8 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 1. **导入** — 如果有店铺商品页面，使用 `import_product_from_url`；如果没有可读取的页面，则使用
    `create_product_from_images`。
 2. **等待草稿** — 轮询 `get_product`，直到商品导入和方案起草完成。
-3. **查看并调整** — 方案以文本返回，包含开场钩子、内容重点、形式、执行指南和限制条件。
-   使用 `update_video_direction` 进行编辑，或使用 `redraft_video_direction` 获取另一个方向。
+3. **查看并调整** — 方案以文本返回，供用户审阅。
+   使用 `update_video_direction` 修改任何内容，或使用 `redraft_video_direction` 换一个角度。
 4. **生成** — 使用 `generate_video`，并传入 `expected_credit_cost`：即 `get_product` 报告并已告知用户的
    算力费用。费用不一致时会拒绝执行，不会扣费。
 5. **获取结果** — 轮询 `get_video`，获取完成的 MP4 文件和公开分享链接。
