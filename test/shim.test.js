@@ -192,7 +192,7 @@ test("serves initialization and the bundled tool manifest without contacting ups
   const initialized = await nextMessage();
   assert.equal(initialized.id, 1);
   assert.equal(initialized.result.serverInfo.name, "instantclips");
-  assert.equal(initialized.result.serverInfo.version, "0.7.2");
+  assert.equal(initialized.result.serverInfo.version, "0.9.0");
   assert.deepEqual(initialized.result.capabilities, { tools: {} });
   assert.match(initialized.result.instructions, /generate_video/);
 
@@ -219,6 +219,8 @@ test("serves initialization and the bundled tool manifest without contacting ups
       "redraft_video_direction",
       "generate_video",
       "get_video",
+      "rate_video",
+      "send_feedback",
     ],
   );
 
@@ -404,7 +406,7 @@ test("allows offline discovery when the token is missing and rejects only tool c
   run.child.stdin.write(
     `${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })}\n`,
   );
-  assert.equal((await nextMessage()).result.tools.length, 13);
+  assert.equal((await nextMessage()).result.tools.length, 15);
   run.child.stdin.write(
     `${JSON.stringify({
       jsonrpc: "2.0",
@@ -452,14 +454,14 @@ test("package and registry identities keep the domain-authenticated namespace", 
 
   assert.equal(packageJson.mcpName, "ai.instantclips/instantclips");
   assert.equal(packageJson.mcpName, serverJson.name);
-  assert.equal(serverJson.version, "1.7.2");
+  assert.equal(serverJson.version, "1.9.0");
   assert.equal(serverJson.remotes.length, 1);
   assert.equal(serverJson.packages.length, 1);
   assert.equal(serverJson.packages[0].identifier, packageJson.name);
   assert.equal(serverJson.packages[0].version, packageJson.version);
   assert.equal(serverJson.packages[0].transport.type, "stdio");
   assert.equal(manifest.serverInfo.name, "instantclips");
-  assert.equal(manifest.tools.length, 13);
+  assert.equal(manifest.tools.length, 15);
   assert.equal(
     new Set(manifest.tools.map((tool) => tool.name)).size,
     manifest.tools.length,

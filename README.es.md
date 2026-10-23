@@ -212,20 +212,22 @@ El flujo de trabajo, en orden:
 
 1. **Importar** — usa `import_product_from_url` para una página de tienda o
    `create_product_from_images` cuando no haya una página que leer.
-2. **Esperar el borrador** — consulta `get_product` periódicamente hasta que terminen la importación
-   y la preparación del plan.
-3. **Revisarlo y orientarlo** — el plan se devuelve como texto para que el usuario lo revise.
-   `update_video_direction` cambia lo que haga falta y `redraft_video_direction` propone otro
-   enfoque.
+2. **Esperar la importación** — consulta `get_product` periódicamente hasta que `import_status` sea
+   "imported".
+3. **Elegir la idea y revisar el plan** — ofrece las `ideas` del producto, como hace la web. La
+   elección del usuario, o sus propias palabras, va en el `creator_note` de `update_video_direction`,
+   que redacta el plan; `redraft_video_direction` sin idea elige una por él. El plan se devuelve
+   como texto para que el usuario lo revise, y `update_video_direction` cambia lo que haga falta.
 4. **Generar** — usa `generate_video` pasando `expected_credit_cost`: el coste que se le indicó al
    usuario, tal como lo informó `get_product`. Si no coincide, se rechaza sin cobrar.
-5. **Recoger el resultado** — consulta `get_video` periódicamente para obtener el MP4 terminado y
-   un enlace público para compartirlo.
+5. **Recoger el resultado** — consulta `get_video` periódicamente hasta que termine y entrega al
+   usuario el `download_url`, la página propia del vídeo y su enlace público para compartirlo.
 
 Otro vídeo del mismo producto sigue el mismo flujo sobre ese producto: editar o volver a preparar el
 plan abre el borrador del siguiente vídeo, y `generate_video` sin borrador genera otra toma del último
 plan. Un vídeo ya generado no se puede modificar. Cada respuesta de `get_product` incluye `next_step`:
-qué hacer a continuación.
+qué hacer a continuación. Cuando el usuario ha visto un vídeo, `rate_video` registra su valoración;
+`send_feedback` envía al equipo una nota sobre las propias herramientas, con el visto bueno del usuario.
 
 Las marcas funcionan de la misma manera: `list_brands`, `create_brand`, `set_product_brand`. Cada
 vídeo se prepara con la voz de una marca; por eso, si el escaparate de un producto importado no

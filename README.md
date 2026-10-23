@@ -200,18 +200,21 @@ The workflow, in order:
 
 1. **Import** — `import_product_from_url` for a store page, or `create_product_from_images` when
    there is no page to read.
-2. **Wait for the draft** — poll `get_product` until the import and the plan have finished.
-3. **Read and steer it** — the plan comes back as text for the user to review.
-   `update_video_direction` changes anything in it, `redraft_video_direction` asks for another
-   angle.
+2. **Wait for the import** — poll `get_product` until `import_status` is "imported".
+3. **Choose the idea, then read the plan** — offer the product's `ideas`, as the website does. The
+   user's pick, or their own words, goes in `update_video_direction`'s `creator_note`, which writes
+   the plan; `redraft_video_direction` with no idea picks one for them. The plan comes back as
+   text for the user to review, and `update_video_direction` changes anything in it.
 4. **Generate** — `generate_video`, passing `expected_credit_cost`: the cost the user was told, as
    `get_product` reported it. A mismatch is refused without charging.
-5. **Collect** — poll `get_video` for the finished MP4 and a public share link.
+5. **Collect** — poll `get_video` until it is done, then give the user `download_url`, the video's
+   own page and its public share link.
 
 Another video for the same product is the same flow on that product: editing or redrafting opens the
 next video's draft, and `generate_video` with no draft renders another take of the last plan. A
 generated video itself cannot be changed. Every `get_product` response carries `next_step`: what to
-do now.
+do now. Once the user has watched a video, `rate_video` records their verdict; `send_feedback` sends
+the team a note about the tools themselves, with the user's OK.
 
 Brands work the same way: `list_brands`, `create_brand`, `set_product_brand`. Every video is
 drafted in a brand's voice, so an import whose storefront matches no existing brand stops and asks

@@ -183,16 +183,18 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 
 1. **导入** — 如果有店铺商品页面，使用 `import_product_from_url`；如果没有可读取的页面，则使用
    `create_product_from_images`。
-2. **等待草稿** — 轮询 `get_product`，直到商品导入和方案起草完成。
-3. **查看并调整** — 方案以文本返回，供用户审阅。
-   使用 `update_video_direction` 修改任何内容，或使用 `redraft_video_direction` 换一个角度。
+2. **等待导入** — 轮询 `get_product`，直到 `import_status` 为 "imported"。
+3. **选择创意，再查看方案** — 像网站一样，提供商品的 `ideas`。用户选中的创意或自己的描述放进
+   `update_video_direction` 的 `creator_note`，由它写出方案；不带创意调用 `redraft_video_direction`
+   则由我们选一个。方案以文本返回，供用户审阅，使用 `update_video_direction` 可修改其中任何内容。
 4. **生成** — 使用 `generate_video`，并传入 `expected_credit_cost`：即 `get_product` 报告并已告知用户的
    算力费用。费用不一致时会拒绝执行，不会扣费。
-5. **获取结果** — 轮询 `get_video`，获取完成的 MP4 文件和公开分享链接。
+5. **获取结果** — 轮询 `get_video` 直到完成，然后把 `download_url`、视频自己的页面和公开分享链接交给用户。
 
 为同一商品制作另一个视频，走的是同一流程：编辑或重新起草会打开下一个视频的草稿；没有草稿时调用
 `generate_video` 会按上一方案再生成一版。已生成的视频本身无法修改。每次 `get_product` 的响应都带有
-`next_step`，说明下一步该做什么。
+`next_step`，说明下一步该做什么。用户看过视频后，`rate_video` 记录用户自己的评价；`send_feedback`
+经用户同意后，把关于这些工具本身的意见发给团队。
 
 品牌的操作方式相同：`list_brands`、`create_brand`、`set_product_brand`。每个视频都会采用对应品牌
 的表达风格进行起草。因此，当导入商品的店铺与任何现有品牌都不匹配时，流程会暂停并询问，而不是
