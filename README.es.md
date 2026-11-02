@@ -63,6 +63,18 @@ guiará por el inicio de sesión la primera vez. Usa un token y el adaptador std
 navegador?», más abajo) solo para scripts y procesos automatizados que no pueden abrir una página
 de inicio de sesión.
 
+### Cualquier agente de programación
+
+Pega esto en Claude Code, Codex o cualquier agente que ejecute comandos. Añade InstantClips por sí
+mismo y después te dice cómo iniciar sesión:
+
+```text
+Configura InstantClips para mí siguiendo las instrucciones de https://app.instantclips.ai/mcp.md
+```
+
+Las instrucciones que sigue están en [app.instantclips.ai/mcp.md](https://app.instantclips.ai/mcp.md): los comandos de abajo, una
+sección por cliente.
+
 ### Claude Code
 
 ```bash
@@ -75,15 +87,13 @@ la carpeta en la que ejecutas el comando.
 
 ### Codex
 
-Añade lo siguiente a `~/.codex/config.toml`, el archivo que leen la CLI de Codex, la extensión de
-Codex para el IDE y la aplicación de escritorio de ChatGPT:
-
-```toml
-[mcp_servers.instantclips]
-url = "https://app.instantclips.ai/mcp"
+```bash
+codex mcp add instantclips --url https://app.instantclips.ai/mcp
 ```
 
-Después ejecuta `codex mcp login instantclips` para iniciar sesión.
+Añade InstantClips a `~/.codex/config.toml`, el archivo que leen la CLI de Codex, la extensión de
+Codex para el IDE y la aplicación de escritorio de ChatGPT, y abre tu navegador para iniciar sesión.
+`codex mcp login instantclips` vuelve a iniciar el inicio de sesión.
 
 ### Cursor y VS Code
 

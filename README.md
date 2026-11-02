@@ -58,6 +58,18 @@ Connect to the hosted endpoint directly whenever your client supports Streamable
 you through sign-in on first use. Use a token and the stdio adapter (under "No browser?" below)
 only for scripts and automated runners that cannot open a sign-in page.
 
+### Any coding agent
+
+Paste this into Claude Code, Codex or any agent that runs commands. It adds InstantClips itself,
+then tells you how to sign in:
+
+```text
+Set me up with InstantClips by following the instructions at https://app.instantclips.ai/mcp.md
+```
+
+The instructions it follows are [app.instantclips.ai/mcp.md](https://app.instantclips.ai/mcp.md): the commands below, one section
+per client.
+
 ### Claude Code
 
 ```bash
@@ -69,15 +81,13 @@ every project; without it, Claude Code adds a server only to the folder you run 
 
 ### Codex
 
-Add to `~/.codex/config.toml`, which the Codex CLI, the Codex IDE extension and the ChatGPT desktop
-app all read:
-
-```toml
-[mcp_servers.instantclips]
-url = "https://app.instantclips.ai/mcp"
+```bash
+codex mcp add instantclips --url https://app.instantclips.ai/mcp
 ```
 
-Then run `codex mcp login instantclips` to sign in.
+It adds InstantClips to `~/.codex/config.toml`, which the Codex CLI, the Codex IDE extension and the
+ChatGPT desktop app all read, and opens your browser to sign in. `codex mcp login instantclips`
+starts the sign-in again.
 
 ### Cursor and VS Code
 

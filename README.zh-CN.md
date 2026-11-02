@@ -50,6 +50,16 @@ Cursor 和 VS Code 的一键安装按钮。
 如果客户端支持 Streamable HTTP，请直接连接托管端点，首次使用时会引导你登录。只有脚本和无法打开
 登录页的自动化运行环境，才需要使用令牌和下方“没有浏览器？”一节中的 stdio 适配器。
 
+### 任意编程 agent
+
+把这句话粘贴到 Claude Code、Codex 或任何能运行命令的 agent 里。它会自己添加 InstantClips，再告诉你怎么登录：
+
+```text
+按照 https://app.instantclips.ai/mcp.md 上的说明，为我设置 InstantClips
+```
+
+它照着做的说明在 [app.instantclips.ai/mcp.md](https://app.instantclips.ai/mcp.md)：就是下面这些命令，每个客户端一节。
+
 ### Claude Code
 
 ```bash
@@ -61,14 +71,11 @@ claude mcp add --transport http --scope user instantclips https://app.instantcli
 
 ### Codex
 
-将以下配置添加到 `~/.codex/config.toml`。Codex CLI、Codex IDE 扩展和 ChatGPT 桌面版都会读取这个文件：
-
-```toml
-[mcp_servers.instantclips]
-url = "https://app.instantclips.ai/mcp"
+```bash
+codex mcp add instantclips --url https://app.instantclips.ai/mcp
 ```
 
-然后运行 `codex mcp login instantclips` 登录。
+它会把 InstantClips 添加到 `~/.codex/config.toml`（Codex CLI、Codex IDE 扩展和 ChatGPT 桌面版都会读取这个文件），并打开浏览器让你登录。`codex mcp login instantclips` 可以重新登录。
 
 ### Cursor 和 VS Code
 
