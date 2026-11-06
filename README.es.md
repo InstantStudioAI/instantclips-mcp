@@ -246,8 +246,9 @@ coincide con ninguna marca existente, el proceso se detiene y pregunta en lugar 
 El servidor alojado publica los parámetros exactos de cada herramienta. La instantánea generada
 [`manifest/instantclips-mcp.json`](manifest/instantclips-mcp.json) permite que clientes stdio y
 registros inspeccionen los mismos esquemas sin credenciales. Quienes mantienen el repositorio la
-actualizan con `INSTANTCLIPS_TOKEN="..." npm run sync:manifest`; `npm run check:manifest` falla si
-la copia incluida difiere del servidor en producción. Ejecuta `python example.py tools` cuando
+actualizan con `npm run sync:manifest`, sin token, porque el servidor alojado lista sus herramientas
+sin iniciar sesión; `npm run check:manifest` falla, indicando qué cambió, si la copia incluida
+difiere del servidor en producción. Ejecuta `python example.py tools` cuando
 quieras imprimir específicamente los esquemas actuales mediante HTTP.
 
 ## Créditos

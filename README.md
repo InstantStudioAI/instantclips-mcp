@@ -233,8 +233,9 @@ rather than guessing.
 Each tool's exact parameters are published by the hosted server. The generated
 [`manifest/instantclips-mcp.json`](manifest/instantclips-mcp.json) snapshot lets stdio clients and
 registries inspect those same schemas without a credential. Maintainers refresh it with
-`INSTANTCLIPS_TOKEN="..." npm run sync:manifest`; `npm run check:manifest` fails when the committed
-snapshot differs from the live server. Run `python example.py tools` below when you specifically
+`npm run sync:manifest`, no token needed, since the hosted server lists its tools without signing in;
+`npm run check:manifest` fails, naming what drifted, when the committed snapshot differs from the
+live server. Run `python example.py tools` below when you specifically
 want to print the live schemas over HTTP.
 
 ## Credits

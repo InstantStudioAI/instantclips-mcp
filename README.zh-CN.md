@@ -210,8 +210,8 @@ INSTANTCLIPS_TOKEN="your-token" npx -y instantclips-mcp --check --json
 每个工具的确切参数均由托管服务器发布。生成的
 [`manifest/instantclips-mcp.json`](manifest/instantclips-mcp.json) 快照让 stdio 客户端和注册表无需
 凭据即可检查同一组 schema。维护者使用
-`INSTANTCLIPS_TOKEN="..." npm run sync:manifest` 更新快照；如果已提交的快照与线上服务器不同，
-`npm run check:manifest` 会失败。如需通过 HTTP 输出实时 schema，请运行下方的
+`npm run sync:manifest` 更新快照，无需令牌：托管服务器无需登录即可列出工具；如果已提交的快照与线上
+服务器不同，`npm run check:manifest` 会失败，并指出哪些内容有变化。如需通过 HTTP 输出实时 schema，请运行下方的
 `python example.py tools`。
 
 ## 算力
